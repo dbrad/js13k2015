@@ -1,0 +1,21 @@
+{
+  "name": "js13k2015",
+  "version": "0.0.1",
+  "description": "Entry for js13k 2015 competition",
+  "author": "David Brad",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dbrad/js13k2015"
+  },
+  "bugs": {
+    "url": "https://github.com/dbrad/js13k2015/issues"
+  },
+  "keywords": [
+    "js13k"
+  ],
+  "dependencies": {
+    "gulp": "*"
+  },
+
+  "license": "MIT"
+}

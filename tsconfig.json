@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "out": "build/game.js",
+        "target": "es5",
+        "noEmitOnError": true
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "./**/*.tsx",
+        "!./node_modules/**/*"
+    ],
+    "files": [
+        "./src/ECS.ts",
+        "./src/game.ts",
+        "./src/graphics.ts",
+        "./src/systems.ts",
+        "./src/tile.ts"
+    ],
+    "scripts": {
+        "postbuild": "gulp htmlmin cssmin imagemin minify zip"
+    }
+}
