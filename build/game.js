@@ -401,9 +401,12 @@ function onResize() {
     var scaleY = window.innerHeight / canvas.height;
     var scaleToFit = Math.min(scaleX, scaleY) | 0;
     scaleToFit = (scaleToFit <= 0) ? 1 : scaleToFit;
+    var size = [canvas.width * scaleToFit, canvas.height * scaleToFit];
+    var offset = this.offset = [(window.innerWidth - size[0]) / 2, (window.innerHeight - size[1]) / 2];
     var stage = document.getElementById("stage");
-    stage.style.transformOrigin = "0 0";
-    stage.style.transform = "scale(" + scaleToFit + ")";
+    var rule = "translate(" + offset[0] + "px, " + offset[1] + "px) scale(" + scaleToFit + ")";
+    stage.style.transform = rule;
+    stage.style.webkitTransform = rule;
 }
 window.onload = function () {
     onResize();

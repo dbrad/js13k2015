@@ -14,7 +14,12 @@
     "js13k"
   ],
   "dependencies": {
-    "gulp": "*"
+    "gulp": "*",
+    "gulp-csso": "*",
+    "gulp-htmlmin": "*",
+    "gulp-imagemin": "*",
+    "gulp-uglify": "*",
+    "gulp-zip": "*"
   },
 
   "license": "MIT"
