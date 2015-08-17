@@ -57,6 +57,15 @@ class SpriteComponent implements Component {
     }
 }
 
+class TileMapComponent implements Component {
+  name: string = "tilemap";
+  tilemapRef: TileMap;
+
+  constructor(tilemap: TileMap) {
+    this.tilemapRef = tilemap;
+  }
+}
+
 class LayerComponent implements Component {
     name: string = "layer";
     layer: number;

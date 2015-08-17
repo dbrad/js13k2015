@@ -1,54 +1,8 @@
+/// <reference path="input.ts"/>
 /// <reference path="graphics.ts"/>
 /// <reference path="tile.ts"/>
 /// <reference path="ECS.ts"/>
 /// <reference path="systems.ts"/>
-
-module Input {
-    export module Keyboard {
-        export enum KEY {
-            A = 65,
-            D = 68,
-            W = 87,
-            S = 83,
-            ENTER = 13,
-            SPACE = 32
-        }
-
-        var _isDown: boolean[] = [];
-        var _isUp: boolean[] = [];
-        var _wasDown: boolean[] = [];
-
-        for (var i = 0; i < 256; i++) {
-            _isUp[i] = true;
-        }
-
-        export function isDown(keyCode: KEY) {
-            return (_isDown[keyCode]);
-        }
-
-        export function wasDown(keyCode: KEY) {
-            var result = _wasDown[keyCode];
-            _wasDown[keyCode] = false;
-            return (result);
-        }
-
-        export function keyDown(event: any) {
-            var keyCode = event.which;
-
-            _isDown[keyCode] = true;
-            if (_isUp[keyCode])
-                _wasDown[keyCode] = true;
-
-            _isUp[keyCode] = false;
-        }
-
-        export function keyUp(event: any) {
-            var keyCode = event.which;
-            _isDown[keyCode] = false;
-            _isUp[keyCode] = true;
-        }
-    }
-}
 
 class Game {
     private _loopHandle: any;
@@ -75,24 +29,26 @@ class Game {
         SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dimension(1, 1), new Point(0, 8)));
         SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dimension(10, 1), new Point(0, 16)));
 
-        this.pEntity = new Entity();
-        this.pEntity.addComponent(new InputComponent());
-        this.pEntity.addComponent(new MovementComponent());
-        this.pEntity.addComponent(new PositionComponent(0, 0));
-        this.pEntity.addComponent(new AABBComponent(8, 8));
-        this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-
-        this.World = new TileMap(new Dimension(32,30));
+        // Full screen is 32 x 30
+        this.World = new TileMap(Dimension.from(16,30), Point.from(0,0));
 
         var tileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
         this.World.setTileSet(tileSet);
         this.World.generateTest();
+
+        this.pEntity = new Entity();
+        this.pEntity.addComponent(new InputComponent());
+        this.pEntity.addComponent(new MovementComponent());
+        this.pEntity.addComponent(new TileMapComponent(this.World));
+        this.pEntity.addComponent(new PositionComponent(0, 0));
+        this.pEntity.addComponent(new AABBComponent(8, 8));
+        this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
     }
 
     /** Update */
     update(delta: number): void {
         input(this.pEntity);
-        collision(this.pEntity, this.World);
+        collision(this.pEntity);
         movement(this.pEntity);
     }
 

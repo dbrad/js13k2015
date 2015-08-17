@@ -2,6 +2,7 @@
   "name": "js13k2015",
   "version": "0.0.1",
   "description": "Entry for js13k 2015 competition",
+  "main" : "gulpfile.js",
   "author": "David Brad",
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
     "gulp-htmlmin": "*",
     "gulp-imagemin": "*",
     "gulp-uglify": "*",
+    "gulp-concat": "*",
     "gulp-zip": "*"
   },
 

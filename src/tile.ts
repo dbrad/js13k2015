@@ -9,8 +9,10 @@ class VTile extends Tile {
 
 class TileSet {
     tiles: VTile[];
+    tileSize: number;
     constructor(sheet: SpriteSheet) {
         this.tiles = [];
+        this.tileSize = sheet.tileSize;
         for (var i: number = 0; i < sheet.sprites.length; i++) {
             this.tiles.push(new VTile(sheet.sprites[i]));
         }
@@ -18,15 +20,17 @@ class TileSet {
 }
 
 class TileMap {
-    private tileSet: TileSet;
     private cache: HTMLCanvasElement;
     private cached: boolean = false;
+    tileSet: TileSet;
     tiles: number[];
     size: Dimension;
+    position: Point;
     layer: number;
 
-    constructor(size: Dimension = new Dimension(1, 1)) {
+    constructor(size: Dimension = new Dimension(1, 1), position: Point = new Point(0,0)) {
         this.size = size;
+        this.position = position;
         this.tiles = [];
         this.cache = document.createElement('canvas');
     }
@@ -64,6 +68,6 @@ class TileMap {
             }
             this.cached = true;
         }
-        externalCTX.drawImage(this.cache, 0, 0);
+        externalCTX.drawImage(this.cache, this.position.x, this.position.y);
     }
 }

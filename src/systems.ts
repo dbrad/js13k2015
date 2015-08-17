@@ -1,9 +1,16 @@
 /// <reference path="ECS.ts"/>
 
 function draw(ctx: Context2D, e: Entity) {
+    var offsetX: number = 0, offsetY: number = 0;
+    if (e["tilemap"]) {
+      offsetX = e["tilemap"].tilemapRef.position.x;
+      offsetY = e["tilemap"].tilemapRef.position.y;
+    }
     ctx.drawImage(e["sprite"].image,
         0, 0, e["aabb"].width, e["aabb"].height,
-        e["position"].x * 8, e["position"].y * 8, e["aabb"].width, e["aabb"].height);
+        e["position"].x * e["sprite"].image.width + offsetX,
+        e["position"].y * e["sprite"].image.height + offsetY,
+        e["aabb"].width, e["aabb"].height);
     e["sprite"].redraw = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
@@ -24,12 +31,14 @@ function input(e: Entity) {
     }
 }
 
-function collision(e: Entity, world: TileMap) {
-  var tile = world.getTile(e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
-  if (!tile || !tile.walkable) {
-      e["movement"].x = 0;
-      e["movement"].y = 0;
-  }
+function collision(e: Entity) {
+    if (e["tilemap"]) {
+        var tile = e["tilemap"].tilemapRef.getTile(e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
+        if (!tile || !tile.walkable) {
+            e["movement"].x = 0;
+            e["movement"].y = 0;
+        }
+    }
 }
 
 function movement(e: Entity) {
