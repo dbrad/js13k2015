@@ -28,7 +28,7 @@ class TileMap {
     position: Point;
     layer: number;
 
-    constructor(size: Dimension = new Dimension(1, 1), position: Point = new Point(0,0)) {
+    constructor(size: Dimension = new Dimension(1, 1), position: Point = new Point(0, 0)) {
         this.size = size;
         this.position = position;
         this.tiles = [];

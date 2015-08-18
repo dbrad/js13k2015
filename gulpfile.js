@@ -7,7 +7,7 @@ var imagemin = require('gulp-imagemin');
 var concat = require('gulp-concat');
 
 gulp.task('concat', function() {
-  return gulp.src(['build/js/input.js', 'build/js/graphics.js', 'build/js/tile.js', 'build/js/ECS.js', 'build/js/systems.js', 'build/js/game.js'])
+  return gulp.src(['build/js/input.js', 'build/js/graphics.js', 'build/js/tile.js', 'build/js/game_objects.js', 'build/js/ECS.js', 'build/js/systems.js', 'build/js/game.js'])
     .pipe(concat('main.js'))
     .pipe(gulp.dest('build'));
 });

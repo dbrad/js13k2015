@@ -235,6 +235,18 @@ var TileMap = (function () {
     return TileMap;
 })();
 
+var Level = (function () {
+    function Level(tilemap) {
+        if (tilemap === void 0) { tilemap = new TileMap(Dimension.from(30, 25), Point.from(8, 32)); }
+        this.tilemap = tilemap;
+        this.tilemap.setTileSet(Level.defaultTileSet);
+        this.tilemap.generateTest();
+        this.entities = [];
+    }
+    return Level;
+})();
+
+/// <reference path="game_objects.ts"/>
 var Entity = (function () {
     function Entity() {
         this._count = 0;
@@ -274,12 +286,12 @@ var SpriteComponent = (function () {
     }
     return SpriteComponent;
 })();
-var TileMapComponent = (function () {
-    function TileMapComponent(tilemap) {
-        this.name = "tilemap";
-        this.tilemapRef = tilemap;
+var LevelComponent = (function () {
+    function LevelComponent(level) {
+        this.name = "level";
+        this.level = level;
     }
-    return TileMapComponent;
+    return LevelComponent;
 })();
 var LayerComponent = (function () {
     function LayerComponent(layer) {
@@ -316,9 +328,9 @@ var InputComponent = (function () {
 /// <reference path="ECS.ts"/>
 function draw(ctx, e) {
     var offsetX = 0, offsetY = 0;
-    if (e["tilemap"]) {
-        offsetX = e["tilemap"].tilemapRef.position.x;
-        offsetY = e["tilemap"].tilemapRef.position.y;
+    if (e["level"]) {
+        offsetX = e["level"].level.tilemap.position.x;
+        offsetY = e["level"].level.tilemap.position.y;
     }
     ctx.drawImage(e["sprite"].image, 0, 0, e["aabb"].width, e["aabb"].height, e["position"].x * e["sprite"].image.width + offsetX, e["position"].y * e["sprite"].image.height + offsetY, e["aabb"].width, e["aabb"].height);
     e["sprite"].redraw = false;
@@ -340,11 +352,25 @@ function input(e) {
     }
 }
 function collision(e) {
-    if (e["tilemap"]) {
-        var tile = e["tilemap"].tilemapRef.getTile(e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
+    if (e["level"]) {
+        var tile = e["level"].level.tilemap.getTile(e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
         if (!tile || !tile.walkable) {
             e["movement"].x = 0;
             e["movement"].y = 0;
+        }
+        else {
+            var occupied = false;
+            for (var _i = 0, _a = e["level"].level.entities; _i < _a.length; _i++) {
+                var entity = _a[_i];
+                occupied = occupied || ((entity["position"].x == (e["position"].x + e["movement"].x))
+                    && (entity["position"].y == (e["position"].y + e["movement"].y)));
+                if (occupied)
+                    break;
+            }
+            if (occupied) {
+                e["movement"].x = 0;
+                e["movement"].y = 0;
+            }
         }
     }
 }
@@ -360,10 +386,13 @@ function movement(e) {
 /// <reference path="input.ts"/>
 /// <reference path="graphics.ts"/>
 /// <reference path="tile.ts"/>
+/// <reference path="game_objects.ts"/>
 /// <reference path="ECS.ts"/>
 /// <reference path="systems.ts"/>
 var Game = (function () {
     function Game(screen) {
+        this.entities = [];
+        this.testAudio = new Audio('blip.wav');
         this.change = true;
         this.clearScreen = true;
         this.then = performance.now();
@@ -378,21 +407,37 @@ var Game = (function () {
         SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dimension(1, 1)));
         SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dimension(1, 1), new Point(0, 8)));
         SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dimension(10, 1), new Point(0, 16)));
-        this.World = new TileMap(Dimension.from(16, 30), Point.from(0, 0));
-        var tileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
-        this.World.setTileSet(tileSet);
-        this.World.generateTest();
+        Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
+        this.World = new Level();
         this.pEntity = new Entity();
         this.pEntity.addComponent(new InputComponent());
         this.pEntity.addComponent(new MovementComponent());
-        this.pEntity.addComponent(new TileMapComponent(this.World));
+        this.pEntity.addComponent(new LevelComponent(this.World));
         this.pEntity.addComponent(new PositionComponent(0, 0));
         this.pEntity.addComponent(new AABBComponent(8, 8));
         this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
+        for (var i = 0; i < 30; i++) {
+            var temp = new Entity();
+            temp.addComponent(new PositionComponent(i + 1, i % 4));
+            temp.addComponent(new AABBComponent(8, 8));
+            temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
+            this.entities.push(temp);
+        }
+        for (var i = 0; i < 25; i++) {
+            var temp = new Entity();
+            temp.addComponent(new PositionComponent(((Math.random() * 30) | 0), ((Math.random() * 25) | 0)));
+            temp.addComponent(new LevelComponent(this.World));
+            temp.addComponent(new AABBComponent(8, 8));
+            temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
+            this.World.entities.push(temp);
+        }
+        this.testAudio.play();
     };
     Game.prototype.update = function (delta) {
         input(this.pEntity);
-        collision(this.pEntity);
+        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0) {
+            collision(this.pEntity);
+        }
         movement(this.pEntity);
     };
     Game.prototype.draw = function () {
@@ -400,9 +445,19 @@ var Game = (function () {
             this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
             this.clearScreen = false;
         }
+        for (var _i = 0, _a = this.entities; _i < _a.length; _i++) {
+            var entity = _a[_i];
+            if (entity["sprite"].redraw) {
+                draw(this.ctx, entity);
+            }
+        }
         if (this.pEntity["sprite"].redraw || this.change) {
-            this.World.draw(this.ctx);
+            this.World.tilemap.draw(this.ctx);
             draw(this.ctx, this.pEntity);
+            for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
+                var entity = _c[_b];
+                draw(this.ctx, entity);
+            }
             this.change = false;
         }
     };

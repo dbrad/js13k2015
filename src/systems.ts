@@ -2,9 +2,9 @@
 
 function draw(ctx: Context2D, e: Entity) {
     var offsetX: number = 0, offsetY: number = 0;
-    if (e["tilemap"]) {
-      offsetX = e["tilemap"].tilemapRef.position.x;
-      offsetY = e["tilemap"].tilemapRef.position.y;
+    if (e["level"]) {
+        offsetX = e["level"].level.tilemap.position.x;
+        offsetY = e["level"].level.tilemap.position.y;
     }
     ctx.drawImage(e["sprite"].image,
         0, 0, e["aabb"].width, e["aabb"].height,
@@ -32,11 +32,24 @@ function input(e: Entity) {
 }
 
 function collision(e: Entity) {
-    if (e["tilemap"]) {
-        var tile = e["tilemap"].tilemapRef.getTile(e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
+    if (e["level"]) {
+        var tile = e["level"].level.tilemap.getTile(
+            e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
         if (!tile || !tile.walkable) {
             e["movement"].x = 0;
             e["movement"].y = 0;
+        } else {
+            var occupied = false;
+            for (var entity of e["level"].level.entities) {
+                occupied = occupied || ((entity["position"].x == (e["position"].x + e["movement"].x))
+                    && (entity["position"].y == (e["position"].y + e["movement"].y)));
+                if (occupied)
+                    break;
+            }
+            if (occupied) {
+                e["movement"].x = 0;
+                e["movement"].y = 0;
+            }
         }
     }
 }

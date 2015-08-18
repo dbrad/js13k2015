@@ -4,6 +4,7 @@ body, html {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background-color: black;
 }
 #stage {
   transform-origin: 0 0;
@@ -12,7 +13,7 @@ body, html {
   -webkit-user-select: none;
 }
 canvas, img {
-  border: 1px solid black;
+  background-color: white;
   image-rendering: optimizeSpeed;             /* Older versions of FF          */
   image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
   image-rendering: -webkit-optimize-contrast; /* Safari                        */

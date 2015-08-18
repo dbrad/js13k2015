@@ -16,6 +16,7 @@
     "files": [
         "./src/ECS.ts",
         "./src/game.ts",
+        "./src/game_objects.ts",
         "./src/graphics.ts",
         "./src/input.ts",
         "./src/systems.ts",

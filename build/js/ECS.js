@@ -1,3 +1,4 @@
+/// <reference path="game_objects.ts"/>
 var Entity = (function () {
     function Entity() {
         this._count = 0;
@@ -37,12 +38,12 @@ var SpriteComponent = (function () {
     }
     return SpriteComponent;
 })();
-var TileMapComponent = (function () {
-    function TileMapComponent(tilemap) {
-        this.name = "tilemap";
-        this.tilemapRef = tilemap;
+var LevelComponent = (function () {
+    function LevelComponent(level) {
+        this.name = "level";
+        this.level = level;
     }
-    return TileMapComponent;
+    return LevelComponent;
 })();
 var LayerComponent = (function () {
     function LayerComponent(layer) {

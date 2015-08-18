@@ -1,3 +1,4 @@
+/// <reference path="game_objects.ts"/>
 /** ECS */
 interface Component {
     name: string;
@@ -57,13 +58,13 @@ class SpriteComponent implements Component {
     }
 }
 
-class TileMapComponent implements Component {
-  name: string = "tilemap";
-  tilemapRef: TileMap;
+class LevelComponent implements Component {
+    name: string = "level";
+    level: Level;
 
-  constructor(tilemap: TileMap) {
-    this.tilemapRef = tilemap;
-  }
+    constructor(level: Level) {
+        this.level = level;
+    }
 }
 
 class LayerComponent implements Component {
@@ -76,9 +77,9 @@ class LayerComponent implements Component {
 }
 
 class MovementComponent implements Component {
-  name: string = "movement";
-  x: number = 0;;
-  y: number = 0;
+    name: string = "movement";
+    x: number = 0;;
+    y: number = 0;
 }
 
 class PlayerComponent implements Component {
