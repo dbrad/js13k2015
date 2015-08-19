@@ -17,20 +17,22 @@ var VTile = (function (_super) {
 var TileSet = (function () {
     function TileSet(sheet) {
         this.tiles = [];
-        this.tileSize = sheet.tileSize;
+        this.ts = sheet.ts;
         for (var i = 0; i < sheet.sprites.length; i++) {
             this.tiles.push(new VTile(sheet.sprites[i]));
         }
+        this.tiles.push(new VTile(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
+        this.tiles[1].walkable = false;
     }
     return TileSet;
 })();
 var TileMap = (function () {
-    function TileMap(size, position) {
+    function TileMap(size, pos) {
         if (size === void 0) { size = new Dimension(1, 1); }
-        if (position === void 0) { position = new Point(0, 0); }
+        if (pos === void 0) { pos = new Point(0, 0); }
         this.cached = false;
         this.size = size;
-        this.position = position;
+        this.pos = pos;
         this.tiles = [];
         this.cache = document.createElement('canvas');
     }
@@ -46,11 +48,6 @@ var TileMap = (function () {
     TileMap.prototype.setTileSet = function (set) {
         this.tileSet = set;
     };
-    TileMap.prototype.generateTest = function () {
-        for (var i = 0; i < (this.size.width * this.size.height); i++) {
-            this.tiles[i] = 0;
-        }
-    };
     TileMap.prototype.draw = function (ctx) {
         var externalCTX = ctx;
         if (!this.cached) {
@@ -64,7 +61,7 @@ var TileMap = (function () {
             }
             this.cached = true;
         }
-        externalCTX.drawImage(this.cache, this.position.x, this.position.y);
+        externalCTX.drawImage(this.cache, this.pos.x, this.pos.y);
     };
     return TileMap;
 })();

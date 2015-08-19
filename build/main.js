@@ -79,30 +79,30 @@ var Tile = (function () {
     return Tile;
 })();
 var SpriteSheet = (function () {
-    function SpriteSheet(imageName, sheetName, tileSize, gutter, subsheet, offset) {
+    function SpriteSheet(imageName, sheetName, ts, gutter, ss, offset) {
         if (gutter === void 0) { gutter = 0; }
-        if (subsheet === void 0) { subsheet = new Dimension(0, 0); }
+        if (ss === void 0) { ss = new Dimension(0, 0); }
         if (offset === void 0) { offset = new Point(0, 0); }
         this.sprites = [];
         this.name = sheetName;
         this.offset = offset;
-        this.subsheet = subsheet;
-        this.tileSize = tileSize;
+        this.ss = ss;
+        this.ts = ts;
         this.gutter = gutter;
         this.image = ImageCache.getTexture(imageName);
         this.storeSprites();
     }
     SpriteSheet.prototype.storeSprites = function (callback) {
         if (callback === void 0) { callback = null; }
-        this.spritesPerRow = ((this.subsheet.width === 0 || this.subsheet.height === 0) ? (this.image.width / this.tileSize) : this.subsheet.width);
-        this.spritesPerCol = ((this.subsheet.width === 0 || this.subsheet.height === 0) ? (this.image.height / this.tileSize) : this.subsheet.height);
+        this.spritesPerRow = ((this.ss.width === 0 || this.ss.height === 0) ? (this.image.width / this.ts) : this.ss.width);
+        this.spritesPerCol = ((this.ss.width === 0 || this.ss.height === 0) ? (this.image.height / this.ts) : this.ss.height);
         var sprite;
         for (var y = 0; y < this.spritesPerCol; y++) {
             for (var x = 0; x < this.spritesPerRow; x++) {
                 sprite = this.sprites[x + (y * this.spritesPerRow)] = document.createElement('canvas');
-                sprite.width = this.tileSize;
-                sprite.height = this.tileSize;
-                sprite.getContext('2d').drawImage(this.image, ((this.tileSize + this.gutter) * x) + this.offset.x, ((this.tileSize + this.gutter) * y) + this.offset.y, this.tileSize, this.tileSize, 0, 0, this.tileSize, this.tileSize);
+                sprite.width = this.ts;
+                sprite.height = this.ts;
+                sprite.getContext('2d').drawImage(this.image, ((this.ts + this.gutter) * x) + this.offset.x, ((this.ts + this.gutter) * y) + this.offset.y, this.ts, this.ts, 0, 0, this.ts, this.ts);
             }
         }
     };
@@ -191,20 +191,22 @@ var VTile = (function (_super) {
 var TileSet = (function () {
     function TileSet(sheet) {
         this.tiles = [];
-        this.tileSize = sheet.tileSize;
+        this.ts = sheet.ts;
         for (var i = 0; i < sheet.sprites.length; i++) {
             this.tiles.push(new VTile(sheet.sprites[i]));
         }
+        this.tiles.push(new VTile(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
+        this.tiles[1].walkable = false;
     }
     return TileSet;
 })();
 var TileMap = (function () {
-    function TileMap(size, position) {
+    function TileMap(size, pos) {
         if (size === void 0) { size = new Dimension(1, 1); }
-        if (position === void 0) { position = new Point(0, 0); }
+        if (pos === void 0) { pos = new Point(0, 0); }
         this.cached = false;
         this.size = size;
-        this.position = position;
+        this.pos = pos;
         this.tiles = [];
         this.cache = document.createElement('canvas');
     }
@@ -220,11 +222,6 @@ var TileMap = (function () {
     TileMap.prototype.setTileSet = function (set) {
         this.tileSet = set;
     };
-    TileMap.prototype.generateTest = function () {
-        for (var i = 0; i < (this.size.width * this.size.height); i++) {
-            this.tiles[i] = 0;
-        }
-    };
     TileMap.prototype.draw = function (ctx) {
         var externalCTX = ctx;
         if (!this.cached) {
@@ -238,19 +235,30 @@ var TileMap = (function () {
             }
             this.cached = true;
         }
-        externalCTX.drawImage(this.cache, this.position.x, this.position.y);
+        externalCTX.drawImage(this.cache, this.pos.x, this.pos.y);
     };
     return TileMap;
 })();
 
 var Level = (function () {
-    function Level(tilemap) {
-        if (tilemap === void 0) { tilemap = new TileMap(Dimension.from(30, 25), Point.from(8, 32)); }
-        this.tilemap = tilemap;
-        this.tilemap.setTileSet(Level.defaultTileSet);
-        this.tilemap.generateTest();
+    function Level(map) {
+        if (map === void 0) { map = new TileMap(Dimension.from(30, 25), Point.from(8, 32)); }
+        this.map = map;
+        this.map.setTileSet(Level.defaultTileSet);
+        this.generateLevel();
         this.entities = [];
     }
+    Level.prototype.generateLevel = function () {
+        for (var i = 0; i < (30 * 25); i++) {
+            this.map.tiles[i] = 0;
+        }
+        for (var i = 0; i < 30; i++) {
+            this.map.tiles[i] = this.map.tiles[this.map.tiles.length - 1 - i] = 1;
+        }
+        for (var i = 1; i < 24; i++) {
+            this.map.tiles[this.map.size.width * i] = this.map.tiles[(this.map.size.width * (i + 1)) - 1] = 1;
+        }
+    };
     return Level;
 })();
 
@@ -272,7 +280,7 @@ var Entity = (function () {
 })();
 var PositionComponent = (function () {
     function PositionComponent(x, y) {
-        this.name = "position";
+        this.name = "pos";
         this.x = x;
         this.y = y;
     }
@@ -344,10 +352,10 @@ var InputComponent = (function () {
 function draw(ctx, e) {
     var offsetX = 0, offsetY = 0;
     if (e["level"]) {
-        offsetX = e["level"].level.tilemap.position.x;
-        offsetY = e["level"].level.tilemap.position.y;
+        offsetX = e["level"].level.map.pos.x;
+        offsetY = e["level"].level.map.pos.y;
     }
-    ctx.drawImage(e["sprite"].image, 0, 0, e["aabb"].width, e["aabb"].height, e["position"].x * e["sprite"].image.width + offsetX, e["position"].y * e["sprite"].image.height + offsetY, e["aabb"].width, e["aabb"].height);
+    ctx.drawImage(e["sprite"].image, 0, 0, e["aabb"].width, e["aabb"].height, e["pos"].x * e["sprite"].image.width + offsetX, e["pos"].y * e["sprite"].image.height + offsetY, e["aabb"].width, e["aabb"].height);
     e["sprite"].redraw = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
@@ -368,7 +376,7 @@ function input(e) {
 }
 function collision(e) {
     if (e["level"]) {
-        var tile = e["level"].level.tilemap.getTile(e["position"].x + e["movement"].x, e["position"].y + e["movement"].y);
+        var tile = e["level"].level.map.getTile(e["pos"].x + e["movement"].x, e["pos"].y + e["movement"].y);
         if (!tile || !tile.walkable) {
             e["movement"].x = 0;
             e["movement"].y = 0;
@@ -377,8 +385,8 @@ function collision(e) {
             var occupied = false;
             for (var _i = 0, _a = e["level"].level.entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
-                occupied = occupied || ((entity["position"].x == (e["position"].x + e["movement"].x))
-                    && (entity["position"].y == (e["position"].y + e["movement"].y)));
+                occupied = occupied || ((entity["pos"].x == (e["pos"].x + e["movement"].x))
+                    && (entity["pos"].y == (e["pos"].y + e["movement"].y)));
                 if (occupied)
                     break;
             }
@@ -389,10 +397,18 @@ function collision(e) {
         }
     }
 }
+function combat(e) {
+    if (e["combat"] && e["combat"].target) {
+    }
+}
+function AIMovement(e) {
+    if (e["AIPath"] && e["AIPath"].ready) {
+    }
+}
 function movement(e) {
     if (e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
-        e["position"].x += e["movement"].x;
-        e["position"].y += e["movement"].y;
+        e["pos"].x += e["movement"].x;
+        e["pos"].y += e["movement"].y;
         e["movement"].x = e["movement"].y = 0;
         e["sprite"].redraw = true;
     }
@@ -412,7 +428,7 @@ function movementSound(e) {
 var Game = (function () {
     function Game(screen) {
         this.entities = [];
-        this.movementDelta = 0;
+        this.state = "MainMenu";
         this.change = true;
         this.clearScreen = true;
         this.then = performance.now();
@@ -434,19 +450,19 @@ var Game = (function () {
         this.pEntity.addComponent(new MovementComponent());
         this.pEntity.addComponent(new AudioComponent('boop3.wav'));
         this.pEntity.addComponent(new LevelComponent(this.World));
-        this.pEntity.addComponent(new PositionComponent(0, 0));
+        this.pEntity.addComponent(new PositionComponent(1, 1));
         this.pEntity.addComponent(new AABBComponent(8, 8));
         this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
         for (var i = 0; i < 30; i++) {
             var temp = new Entity();
-            temp.addComponent(new PositionComponent(i + 1, i % 4));
+            temp.addComponent(new PositionComponent(i + 1, 3));
             temp.addComponent(new AABBComponent(8, 8));
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
             this.entities.push(temp);
         }
-        for (var i = 0; i < 25; i++) {
+        for (var i = 0; i < 15; i++) {
             var temp = new Entity();
-            temp.addComponent(new PositionComponent(((Math.random() * 30) | 0), ((Math.random() * 25) | 0)));
+            temp.addComponent(new PositionComponent(((Math.random() * 28) | 0) + 1, ((Math.random() * 23) | 0) + 1));
             temp.addComponent(new LevelComponent(this.World));
             temp.addComponent(new AABBComponent(8, 8));
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
@@ -454,31 +470,56 @@ var Game = (function () {
         }
     };
     Game.prototype.update = function (delta) {
-        input(this.pEntity);
-        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
-            collision(this.pEntity);
-        movementSound(this.pEntity);
-        movement(this.pEntity);
+        switch (this.state) {
+            case "MainMenu":
+                this.state = "GameMaze";
+                break;
+            case "GameMaze":
+                input(this.pEntity);
+                if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
+                    collision(this.pEntity);
+                movementSound(this.pEntity);
+                movement(this.pEntity);
+                break;
+            case "GameMenu":
+                break;
+            case "GameOver":
+                this.state = "MainMenu";
+                break;
+            default:
+                break;
+        }
     };
     Game.prototype.draw = function () {
-        if (this.clearScreen) {
-            this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
-            this.clearScreen = false;
-        }
-        for (var _i = 0, _a = this.entities; _i < _a.length; _i++) {
-            var entity = _a[_i];
-            if (entity["sprite"].redraw) {
-                draw(this.ctx, entity);
-            }
-        }
-        if (this.pEntity["sprite"].redraw || this.change) {
-            this.World.tilemap.draw(this.ctx);
-            draw(this.ctx, this.pEntity);
-            for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
-                var entity = _c[_b];
-                draw(this.ctx, entity);
-            }
-            this.change = false;
+        switch (this.state) {
+            case "MainMenu":
+                break;
+            case "GameMaze":
+            case "GameMenu":
+                if (this.clearScreen) {
+                    this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
+                    this.clearScreen = false;
+                }
+                for (var _i = 0, _a = this.entities; _i < _a.length; _i++) {
+                    var entity = _a[_i];
+                    if (entity["sprite"].redraw) {
+                        draw(this.ctx, entity);
+                    }
+                }
+                if (this.pEntity["sprite"].redraw || this.change) {
+                    this.World.map.draw(this.ctx);
+                    draw(this.ctx, this.pEntity);
+                    for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
+                        var entity = _c[_b];
+                        draw(this.ctx, entity);
+                    }
+                    this.change = false;
+                }
+                break;
+            case "GameOver":
+                break;
+            default:
+                break;
         }
     };
     Game.prototype.render = function () {

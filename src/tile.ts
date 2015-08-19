@@ -9,13 +9,15 @@ class VTile extends Tile {
 
 class TileSet {
     tiles: VTile[];
-    tileSize: number;
+    ts: number;
     constructor(sheet: SpriteSheet) {
         this.tiles = [];
-        this.tileSize = sheet.tileSize;
+        this.ts = sheet.ts;
         for (var i: number = 0; i < sheet.sprites.length; i++) {
             this.tiles.push(new VTile(sheet.sprites[i]));
         }
+        this.tiles.push(new VTile(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
+        this.tiles[1].walkable = false;
     }
 }
 
@@ -25,12 +27,12 @@ class TileMap {
     tileSet: TileSet;
     tiles: number[];
     size: Dimension;
-    position: Point;
+    pos: Point;
     layer: number;
 
-    constructor(size: Dimension = new Dimension(1, 1), position: Point = new Point(0, 0)) {
+    constructor(size: Dimension = new Dimension(1, 1), pos: Point = new Point(0, 0)) {
         this.size = size;
-        this.position = position;
+        this.pos = pos;
         this.tiles = [];
         this.cache = document.createElement('canvas');
     }
@@ -49,12 +51,6 @@ class TileMap {
         this.tileSet = set;
     }
 
-    generateTest(): void {
-        for (var i: number = 0; i < (this.size.width * this.size.height); i++) {
-            this.tiles[i] = 0;
-        }
-    }
-
     draw(ctx: Context2D): void {
         var externalCTX = ctx;
         if (!this.cached) {
@@ -68,6 +64,6 @@ class TileMap {
             }
             this.cached = true;
         }
-        externalCTX.drawImage(this.cache, this.position.x, this.position.y);
+        externalCTX.drawImage(this.cache, this.pos.x, this.pos.y);
     }
 }

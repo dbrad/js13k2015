@@ -55,39 +55,39 @@ class SpriteSheet {
     name: string;
     gutter: number;
     offset: Point;
-    subsheet: Dimension;
-    tileSize: number;
+    ss: Dimension;
+    ts: number;
 
     spritesPerRow: number;
     spritesPerCol: number;
 
     constructor(
-        imageName: string, sheetName: string, tileSize: number, gutter: number = 0,
-        subsheet: Dimension = new Dimension(0, 0), offset: Point = new Point(0, 0)) {
+        imageName: string, sheetName: string, ts: number, gutter: number = 0,
+        ss: Dimension = new Dimension(0, 0), offset: Point = new Point(0, 0)) {
 
         this.name = sheetName;
         this.offset = offset;
-        this.subsheet = subsheet;
-        this.tileSize = tileSize;
+        this.ss = ss;
+        this.ts = ts;
         this.gutter = gutter;
         this.image = ImageCache.getTexture(imageName);
         this.storeSprites();
     }
 
     private storeSprites(callback: any = null) {
-        this.spritesPerRow = ((this.subsheet.width === 0 || this.subsheet.height === 0) ? (this.image.width / this.tileSize) : this.subsheet.width);
-        this.spritesPerCol = ((this.subsheet.width === 0 || this.subsheet.height === 0) ? (this.image.height / this.tileSize) : this.subsheet.height);
+        this.spritesPerRow = ((this.ss.width === 0 || this.ss.height === 0) ? (this.image.width / this.ts) : this.ss.width);
+        this.spritesPerCol = ((this.ss.width === 0 || this.ss.height === 0) ? (this.image.height / this.ts) : this.ss.height);
 
         var sprite: HTMLCanvasElement;
         for (var y = 0; y < this.spritesPerCol; y++) {
             for (var x = 0; x < this.spritesPerRow; x++) {
                 sprite = this.sprites[x + (y * this.spritesPerRow)] = document.createElement('canvas');
-                sprite.width = this.tileSize;
-                sprite.height = this.tileSize;
+                sprite.width = this.ts;
+                sprite.height = this.ts;
                 sprite.getContext('2d').drawImage(this.image,
-                    ((this.tileSize + this.gutter) * x) + this.offset.x,
-                    ((this.tileSize + this.gutter) * y) + this.offset.y,
-                    this.tileSize, this.tileSize, 0, 0, this.tileSize, this.tileSize);
+                    ((this.ts + this.gutter) * x) + this.offset.x,
+                    ((this.ts + this.gutter) * y) + this.offset.y,
+                    this.ts, this.ts, 0, 0, this.ts, this.ts);
             }
         }
     }

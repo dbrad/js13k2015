@@ -27,7 +27,7 @@ class Entity {
 
 /** Components */
 class PositionComponent implements Component {
-    name: string = "position";
+    name: string = "pos";
     x: number;
     y: number;
 

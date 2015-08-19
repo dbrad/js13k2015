@@ -7,7 +7,7 @@
 var Game = (function () {
     function Game(screen) {
         this.entities = [];
-        this.movementDelta = 0;
+        this.state = "MainMenu";
         this.change = true;
         this.clearScreen = true;
         this.then = performance.now();
@@ -29,19 +29,19 @@ var Game = (function () {
         this.pEntity.addComponent(new MovementComponent());
         this.pEntity.addComponent(new AudioComponent('boop3.wav'));
         this.pEntity.addComponent(new LevelComponent(this.World));
-        this.pEntity.addComponent(new PositionComponent(0, 0));
+        this.pEntity.addComponent(new PositionComponent(1, 1));
         this.pEntity.addComponent(new AABBComponent(8, 8));
         this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
         for (var i = 0; i < 30; i++) {
             var temp = new Entity();
-            temp.addComponent(new PositionComponent(i + 1, i % 4));
+            temp.addComponent(new PositionComponent(i + 1, 3));
             temp.addComponent(new AABBComponent(8, 8));
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
             this.entities.push(temp);
         }
-        for (var i = 0; i < 25; i++) {
+        for (var i = 0; i < 15; i++) {
             var temp = new Entity();
-            temp.addComponent(new PositionComponent(((Math.random() * 30) | 0), ((Math.random() * 25) | 0)));
+            temp.addComponent(new PositionComponent(((Math.random() * 28) | 0) + 1, ((Math.random() * 23) | 0) + 1));
             temp.addComponent(new LevelComponent(this.World));
             temp.addComponent(new AABBComponent(8, 8));
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
@@ -49,31 +49,56 @@ var Game = (function () {
         }
     };
     Game.prototype.update = function (delta) {
-        input(this.pEntity);
-        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
-            collision(this.pEntity);
-        movementSound(this.pEntity);
-        movement(this.pEntity);
+        switch (this.state) {
+            case "MainMenu":
+                this.state = "GameMaze";
+                break;
+            case "GameMaze":
+                input(this.pEntity);
+                if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
+                    collision(this.pEntity);
+                movementSound(this.pEntity);
+                movement(this.pEntity);
+                break;
+            case "GameMenu":
+                break;
+            case "GameOver":
+                this.state = "MainMenu";
+                break;
+            default:
+                break;
+        }
     };
     Game.prototype.draw = function () {
-        if (this.clearScreen) {
-            this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
-            this.clearScreen = false;
-        }
-        for (var _i = 0, _a = this.entities; _i < _a.length; _i++) {
-            var entity = _a[_i];
-            if (entity["sprite"].redraw) {
-                draw(this.ctx, entity);
-            }
-        }
-        if (this.pEntity["sprite"].redraw || this.change) {
-            this.World.tilemap.draw(this.ctx);
-            draw(this.ctx, this.pEntity);
-            for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
-                var entity = _c[_b];
-                draw(this.ctx, entity);
-            }
-            this.change = false;
+        switch (this.state) {
+            case "MainMenu":
+                break;
+            case "GameMaze":
+            case "GameMenu":
+                if (this.clearScreen) {
+                    this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
+                    this.clearScreen = false;
+                }
+                for (var _i = 0, _a = this.entities; _i < _a.length; _i++) {
+                    var entity = _a[_i];
+                    if (entity["sprite"].redraw) {
+                        draw(this.ctx, entity);
+                    }
+                }
+                if (this.pEntity["sprite"].redraw || this.change) {
+                    this.World.map.draw(this.ctx);
+                    draw(this.ctx, this.pEntity);
+                    for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
+                        var entity = _c[_b];
+                        draw(this.ctx, entity);
+                    }
+                    this.change = false;
+                }
+                break;
+            case "GameOver":
+                break;
+            default:
+                break;
         }
     };
     Game.prototype.render = function () {

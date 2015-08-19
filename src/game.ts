@@ -41,21 +41,21 @@ class Game {
         this.pEntity.addComponent(new MovementComponent());
         this.pEntity.addComponent(new AudioComponent('boop3.wav'));
         this.pEntity.addComponent(new LevelComponent(this.World));
-        this.pEntity.addComponent(new PositionComponent(0, 0));
+        this.pEntity.addComponent(new PositionComponent(1, 1));
         this.pEntity.addComponent(new AABBComponent(8, 8));
         this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
 
         for (var i: number = 0; i < 30; i++) {
             var temp = new Entity();
-            temp.addComponent(new PositionComponent(i + 1, i % 4));
+            temp.addComponent(new PositionComponent(i + 1, 3));
             temp.addComponent(new AABBComponent(8, 8));
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
             this.entities.push(temp);
         }
 
-        for (var i: number = 0; i < 25; i++) {
+        for (var i: number = 0; i < 15; i++) {
             var temp = new Entity();
-            temp.addComponent(new PositionComponent(((Math.random() * 30) | 0), ((Math.random() * 25) | 0)));
+            temp.addComponent(new PositionComponent(((Math.random() * 28) | 0) + 1, ((Math.random() * 23) | 0) + 1));
             temp.addComponent(new LevelComponent(this.World));
             temp.addComponent(new AABBComponent(8, 8));
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
@@ -65,38 +65,62 @@ class Game {
     }
 
     /** Update */
-    movementDelta: number = 0;
+    state: string = "MainMenu";
     update(delta: number): void {
-        input(this.pEntity);
-        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
-            collision(this.pEntity);
-        movementSound(this.pEntity);
-        movement(this.pEntity);
+        switch (this.state) {
+            case "MainMenu":
+                this.state = "GameMaze";
+                break;
+            case "GameMaze":
+                input(this.pEntity);
+                if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
+                    collision(this.pEntity);
+                movementSound(this.pEntity);
+                movement(this.pEntity);
+                break;
+            case "GameMenu":
+                break;
+            case "GameOver":
+                this.state = "MainMenu";
+                break;
+            default:
+                break;
+        }
     }
 
     /** Draw */
     change: boolean = true;
     clearScreen: boolean = true;
     draw(): void {
-        if (this.clearScreen) {
-            this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
-            this.clearScreen = false;
-        }
-        for (var entity of this.entities) {
-            if (entity["sprite"].redraw) {
-                draw(this.ctx, entity);
-            }
-        }
+        switch (this.state) {
+            case "MainMenu":
+                break;
+            case "GameMaze":
+            case "GameMenu":
+                if (this.clearScreen) {
+                    this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
+                    this.clearScreen = false;
+                }
+                for (var entity of this.entities) {
+                    if (entity["sprite"].redraw) {
+                        draw(this.ctx, entity);
+                    }
+                }
 
-        if (this.pEntity["sprite"].redraw || this.change) {
-            this.World.tilemap.draw(this.ctx);
-            draw(this.ctx, this.pEntity);
-            for (var entity of this.World.entities) {
-                draw(this.ctx, entity);
-            }
-            this.change = false;
+                if (this.pEntity["sprite"].redraw || this.change) {
+                    this.World.map.draw(this.ctx);
+                    draw(this.ctx, this.pEntity);
+                    for (var entity of this.World.entities) {
+                        draw(this.ctx, entity);
+                    }
+                    this.change = false;
+                }
+                break;
+            case "GameOver":
+                break;
+            default:
+                break;
         }
-
     }
 
     /** Render/Main Game Loop */

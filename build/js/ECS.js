@@ -16,7 +16,7 @@ var Entity = (function () {
 })();
 var PositionComponent = (function () {
     function PositionComponent(x, y) {
-        this.name = "position";
+        this.name = "pos";
         this.x = x;
         this.y = y;
     }
