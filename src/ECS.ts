@@ -78,10 +78,10 @@ class LayerComponent implements Component {
 
 class AudioComponent implements Component {
   name: string = "audio";
-  sound: string;
+  sound: AudioPool;
 
   constructor(sound: string) {
-    this.sound = sound;
+      this.sound = new AudioPool(sound, 3);
   }
 }
 

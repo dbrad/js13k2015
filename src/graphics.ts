@@ -1,4 +1,4 @@
-class Context2D extends CanvasRenderingContext2D {
+interface Context2D extends CanvasRenderingContext2D {
     mozImageSmoothingEnabled: boolean;
     imageSmoothingEnabled: boolean;
     webkitImageSmoothingEnabled: boolean;
@@ -142,27 +142,24 @@ module ImageCache {
         }
     }
 }
-module AudioPool {
-    var readyPool: AudioHandle[] = [];
 
-    class AudioHandle {
-        audio: HTMLAudioElement = new Audio();
+class AudioPool {
+    private pool: HTMLAudioElement[] = [];
+    private index: number = 0;
+    private maxSize: number;
 
-        setSrcAndPlay(src: string) {
-            this.audio.src = src;
-            this.audio.play();
-            this.audio.onended = this.done.bind(this);
-        }
-        private done() {
-            readyPool.push(this);
+    constructor(sound: string, maxSize: number = 1) {
+        this.maxSize = maxSize
+        for (var i: number = 0; i < this.maxSize; i++) {
+            this.pool[i] = new Audio(sound);
+            this.pool[i].load();
         }
     }
 
-    export function getAudioHandle(): AudioHandle {
-        var ref = readyPool.pop();
-        if (!ref)
-            ref = new AudioHandle();
-
-        return ref;
+    play(): void {
+        if (this.pool[this.index].currentTime == 0 || this.pool[this.index].ended) {
+            this.pool[this.index].play();
+        }
+        this.index = (this.index + 1) % this.maxSize;
     }
 }

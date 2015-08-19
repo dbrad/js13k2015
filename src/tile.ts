@@ -60,7 +60,7 @@ class TileMap {
         if (!this.cached) {
             this.cache.width = this.size.width * 8;
             this.cache.height = this.size.height * 8;
-            var ctx = <Context2D>this.cache.getContext('2d');
+            ctx = <Context2D>this.cache.getContext('2d');
             for (var y: number = 0; y < this.size.height; y++) {
                 for (var x: number = 0; x < this.size.width; x++) {
                     this.getTile(x, y).draw(ctx, x * 8, y * 8);

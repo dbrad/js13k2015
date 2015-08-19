@@ -56,7 +56,7 @@ var LayerComponent = (function () {
 var AudioComponent = (function () {
     function AudioComponent(sound) {
         this.name = "audio";
-        this.sound = sound;
+        this.sound = new AudioPool(sound, 3);
     }
     return AudioComponent;
 })();

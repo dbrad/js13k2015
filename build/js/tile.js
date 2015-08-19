@@ -1,7 +1,8 @@
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 /// <reference path="graphics.ts"/>
 var VTile = (function (_super) {
@@ -55,7 +56,7 @@ var TileMap = (function () {
         if (!this.cached) {
             this.cache.width = this.size.width * 8;
             this.cache.height = this.size.height * 8;
-            var ctx = this.cache.getContext('2d');
+            ctx = this.cache.getContext('2d');
             for (var y = 0; y < this.size.height; y++) {
                 for (var x = 0; x < this.size.width; x++) {
                     this.getTile(x, y).draw(ctx, x * 8, y * 8);

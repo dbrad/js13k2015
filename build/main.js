@@ -44,18 +44,6 @@ var Input;
     })(Keyboard = Input.Keyboard || (Input.Keyboard = {}));
 })(Input || (Input = {}));
 
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var Context2D = (function (_super) {
-    __extends(Context2D, _super);
-    function Context2D() {
-        _super.apply(this, arguments);
-    }
-    return Context2D;
-})(CanvasRenderingContext2D);
 var Point = (function () {
     function Point(x, y) {
         if (x === void 0) { x = 0; }
@@ -164,36 +152,31 @@ var ImageCache;
         Loader.load = load;
     })(Loader = ImageCache.Loader || (ImageCache.Loader = {}));
 })(ImageCache || (ImageCache = {}));
-var AudioPool;
-(function (AudioPool) {
-    var readyPool = [];
-    var AudioHandle = (function () {
-        function AudioHandle() {
-            this.audio = new Audio();
+var AudioPool = (function () {
+    function AudioPool(sound, maxSize) {
+        if (maxSize === void 0) { maxSize = 1; }
+        this.pool = [];
+        this.index = 0;
+        this.maxSize = maxSize;
+        for (var i = 0; i < this.maxSize; i++) {
+            this.pool[i] = new Audio(sound);
+            this.pool[i].load();
         }
-        AudioHandle.prototype.setSrcAndPlay = function (src) {
-            this.audio.src = src;
-            this.audio.play();
-            this.audio.onended = this.done.bind(this);
-        };
-        AudioHandle.prototype.done = function () {
-            readyPool.push(this);
-        };
-        return AudioHandle;
-    })();
-    function getAudioHandle() {
-        var ref = readyPool.pop();
-        if (!ref)
-            ref = new AudioHandle();
-        return ref;
     }
-    AudioPool.getAudioHandle = getAudioHandle;
-})(AudioPool || (AudioPool = {}));
+    AudioPool.prototype.play = function () {
+        if (this.pool[this.index].currentTime == 0 || this.pool[this.index].ended) {
+            this.pool[this.index].play();
+        }
+        this.index = (this.index + 1) % this.maxSize;
+    };
+    return AudioPool;
+})();
 
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 /// <reference path="graphics.ts"/>
 var VTile = (function (_super) {
@@ -247,7 +230,7 @@ var TileMap = (function () {
         if (!this.cached) {
             this.cache.width = this.size.width * 8;
             this.cache.height = this.size.height * 8;
-            var ctx = this.cache.getContext('2d');
+            ctx = this.cache.getContext('2d');
             for (var y = 0; y < this.size.height; y++) {
                 for (var x = 0; x < this.size.width; x++) {
                     this.getTile(x, y).draw(ctx, x * 8, y * 8);
@@ -329,7 +312,7 @@ var LayerComponent = (function () {
 var AudioComponent = (function () {
     function AudioComponent(sound) {
         this.name = "audio";
-        this.sound = sound;
+        this.sound = new AudioPool(sound, 3);
     }
     return AudioComponent;
 })();
@@ -416,9 +399,7 @@ function movement(e) {
 }
 function movementSound(e) {
     if (e["audio"] && e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
-        var boop = AudioPool.getAudioHandle();
-        if (boop)
-            boop.setSrcAndPlay(e["audio"].sound);
+        e["audio"].sound.play();
     }
 }
 

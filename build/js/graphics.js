@@ -1,15 +1,3 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var Context2D = (function (_super) {
-    __extends(Context2D, _super);
-    function Context2D() {
-        _super.apply(this, arguments);
-    }
-    return Context2D;
-})(CanvasRenderingContext2D);
 var Point = (function () {
     function Point(x, y) {
         if (x === void 0) { x = 0; }
@@ -118,28 +106,22 @@ var ImageCache;
         Loader.load = load;
     })(Loader = ImageCache.Loader || (ImageCache.Loader = {}));
 })(ImageCache || (ImageCache = {}));
-var AudioPool;
-(function (AudioPool) {
-    var readyPool = [];
-    var AudioHandle = (function () {
-        function AudioHandle() {
-            this.audio = new Audio();
+var AudioPool = (function () {
+    function AudioPool(sound, maxSize) {
+        if (maxSize === void 0) { maxSize = 1; }
+        this.pool = [];
+        this.index = 0;
+        this.maxSize = maxSize;
+        for (var i = 0; i < this.maxSize; i++) {
+            this.pool[i] = new Audio(sound);
+            this.pool[i].load();
         }
-        AudioHandle.prototype.setSrcAndPlay = function (src) {
-            this.audio.src = src;
-            this.audio.play();
-            this.audio.onended = this.done.bind(this);
-        };
-        AudioHandle.prototype.done = function () {
-            readyPool.push(this);
-        };
-        return AudioHandle;
-    })();
-    function getAudioHandle() {
-        var ref = readyPool.pop();
-        if (!ref)
-            ref = new AudioHandle();
-        return ref;
     }
-    AudioPool.getAudioHandle = getAudioHandle;
-})(AudioPool || (AudioPool = {}));
+    AudioPool.prototype.play = function () {
+        if (this.pool[this.index].currentTime == 0 || this.pool[this.index].ended) {
+            this.pool[this.index].play();
+        }
+        this.index = (this.index + 1) % this.maxSize;
+    };
+    return AudioPool;
+})();
