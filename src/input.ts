@@ -29,11 +29,9 @@ module Input {
 
         export function keyDown(event: any) {
             var keyCode = event.which;
-
             _isDown[keyCode] = true;
             if (_isUp[keyCode])
                 _wasDown[keyCode] = true;
-
             _isUp[keyCode] = false;
         }
 

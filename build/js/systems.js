@@ -55,3 +55,10 @@ function movement(e) {
         e["sprite"].redraw = true;
     }
 }
+function movementSound(e) {
+    if (e["audio"] && e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
+        var boop = AudioPool.getAudioHandle();
+        if (boop)
+            boop.setSrcAndPlay(e["audio"].sound);
+    }
+}

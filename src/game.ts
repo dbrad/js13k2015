@@ -24,7 +24,6 @@ class Game {
     private pEntity: Entity;
     private entities: Entity[] = [];
     World: Level;
-    testAudio: HTMLAudioElement = new Audio('blip.wav');
 
     init(): void {
         console.log("Initializing...");
@@ -40,6 +39,7 @@ class Game {
         this.pEntity = new Entity();
         this.pEntity.addComponent(new InputComponent());
         this.pEntity.addComponent(new MovementComponent());
+        this.pEntity.addComponent(new AudioComponent('boop3.wav'));
         this.pEntity.addComponent(new LevelComponent(this.World));
         this.pEntity.addComponent(new PositionComponent(0, 0));
         this.pEntity.addComponent(new AABBComponent(8, 8));
@@ -61,16 +61,16 @@ class Game {
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
             this.World.entities.push(temp);
         }
-        
-        this.testAudio.play();
+
     }
 
     /** Update */
+    movementDelta: number = 0;
     update(delta: number): void {
         input(this.pEntity);
-        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0) {
+        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
             collision(this.pEntity);
-        }
+        movementSound(this.pEntity);
         movement(this.pEntity);
     }
 

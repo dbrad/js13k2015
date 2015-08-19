@@ -118,3 +118,28 @@ var ImageCache;
         Loader.load = load;
     })(Loader = ImageCache.Loader || (ImageCache.Loader = {}));
 })(ImageCache || (ImageCache = {}));
+var AudioPool;
+(function (AudioPool) {
+    var readyPool = [];
+    var AudioHandle = (function () {
+        function AudioHandle() {
+            this.audio = new Audio();
+        }
+        AudioHandle.prototype.setSrcAndPlay = function (src) {
+            this.audio.src = src;
+            this.audio.play();
+            this.audio.onended = this.done.bind(this);
+        };
+        AudioHandle.prototype.done = function () {
+            readyPool.push(this);
+        };
+        return AudioHandle;
+    })();
+    function getAudioHandle() {
+        var ref = readyPool.pop();
+        if (!ref)
+            ref = new AudioHandle();
+        return ref;
+    }
+    AudioPool.getAudioHandle = getAudioHandle;
+})(AudioPool || (AudioPool = {}));

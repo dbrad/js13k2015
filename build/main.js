@@ -164,6 +164,31 @@ var ImageCache;
         Loader.load = load;
     })(Loader = ImageCache.Loader || (ImageCache.Loader = {}));
 })(ImageCache || (ImageCache = {}));
+var AudioPool;
+(function (AudioPool) {
+    var readyPool = [];
+    var AudioHandle = (function () {
+        function AudioHandle() {
+            this.audio = new Audio();
+        }
+        AudioHandle.prototype.setSrcAndPlay = function (src) {
+            this.audio.src = src;
+            this.audio.play();
+            this.audio.onended = this.done.bind(this);
+        };
+        AudioHandle.prototype.done = function () {
+            readyPool.push(this);
+        };
+        return AudioHandle;
+    })();
+    function getAudioHandle() {
+        var ref = readyPool.pop();
+        if (!ref)
+            ref = new AudioHandle();
+        return ref;
+    }
+    AudioPool.getAudioHandle = getAudioHandle;
+})(AudioPool || (AudioPool = {}));
 
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -301,6 +326,13 @@ var LayerComponent = (function () {
     }
     return LayerComponent;
 })();
+var AudioComponent = (function () {
+    function AudioComponent(sound) {
+        this.name = "audio";
+        this.sound = sound;
+    }
+    return AudioComponent;
+})();
 var MovementComponent = (function () {
     function MovementComponent() {
         this.name = "movement";
@@ -382,6 +414,13 @@ function movement(e) {
         e["sprite"].redraw = true;
     }
 }
+function movementSound(e) {
+    if (e["audio"] && e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
+        var boop = AudioPool.getAudioHandle();
+        if (boop)
+            boop.setSrcAndPlay(e["audio"].sound);
+    }
+}
 
 /// <reference path="input.ts"/>
 /// <reference path="graphics.ts"/>
@@ -392,7 +431,7 @@ function movement(e) {
 var Game = (function () {
     function Game(screen) {
         this.entities = [];
-        this.testAudio = new Audio('blip.wav');
+        this.movementDelta = 0;
         this.change = true;
         this.clearScreen = true;
         this.then = performance.now();
@@ -412,6 +451,7 @@ var Game = (function () {
         this.pEntity = new Entity();
         this.pEntity.addComponent(new InputComponent());
         this.pEntity.addComponent(new MovementComponent());
+        this.pEntity.addComponent(new AudioComponent('boop3.wav'));
         this.pEntity.addComponent(new LevelComponent(this.World));
         this.pEntity.addComponent(new PositionComponent(0, 0));
         this.pEntity.addComponent(new AABBComponent(8, 8));
@@ -431,13 +471,12 @@ var Game = (function () {
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
             this.World.entities.push(temp);
         }
-        this.testAudio.play();
     };
     Game.prototype.update = function (delta) {
         input(this.pEntity);
-        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0) {
+        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
             collision(this.pEntity);
-        }
+        movementSound(this.pEntity);
         movement(this.pEntity);
     };
     Game.prototype.draw = function () {

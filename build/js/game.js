@@ -7,7 +7,7 @@
 var Game = (function () {
     function Game(screen) {
         this.entities = [];
-        this.testAudio = new Audio('blip.wav');
+        this.movementDelta = 0;
         this.change = true;
         this.clearScreen = true;
         this.then = performance.now();
@@ -27,6 +27,7 @@ var Game = (function () {
         this.pEntity = new Entity();
         this.pEntity.addComponent(new InputComponent());
         this.pEntity.addComponent(new MovementComponent());
+        this.pEntity.addComponent(new AudioComponent('boop3.wav'));
         this.pEntity.addComponent(new LevelComponent(this.World));
         this.pEntity.addComponent(new PositionComponent(0, 0));
         this.pEntity.addComponent(new AABBComponent(8, 8));
@@ -46,13 +47,12 @@ var Game = (function () {
             temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
             this.World.entities.push(temp);
         }
-        this.testAudio.play();
     };
     Game.prototype.update = function (delta) {
         input(this.pEntity);
-        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0) {
+        if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
             collision(this.pEntity);
-        }
+        movementSound(this.pEntity);
         movement(this.pEntity);
     };
     Game.prototype.draw = function () {

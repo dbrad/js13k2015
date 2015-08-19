@@ -53,6 +53,13 @@ var LayerComponent = (function () {
     }
     return LayerComponent;
 })();
+var AudioComponent = (function () {
+    function AudioComponent(sound) {
+        this.name = "audio";
+        this.sound = sound;
+    }
+    return AudioComponent;
+})();
 var MovementComponent = (function () {
     function MovementComponent() {
         this.name = "movement";

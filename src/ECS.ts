@@ -76,6 +76,15 @@ class LayerComponent implements Component {
     }
 }
 
+class AudioComponent implements Component {
+  name: string = "audio";
+  sound: string;
+
+  constructor(sound: string) {
+    this.sound = sound;
+  }
+}
+
 class MovementComponent implements Component {
     name: string = "movement";
     x: number = 0;;

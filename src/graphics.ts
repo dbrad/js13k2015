@@ -142,3 +142,27 @@ module ImageCache {
         }
     }
 }
+module AudioPool {
+    var readyPool: AudioHandle[] = [];
+
+    class AudioHandle {
+        audio: HTMLAudioElement = new Audio();
+
+        setSrcAndPlay(src: string) {
+            this.audio.src = src;
+            this.audio.play();
+            this.audio.onended = this.done.bind(this);
+        }
+        private done() {
+            readyPool.push(this);
+        }
+    }
+
+    export function getAudioHandle(): AudioHandle {
+        var ref = readyPool.pop();
+        if (!ref)
+            ref = new AudioHandle();
+
+        return ref;
+    }
+}
