@@ -1,14 +1,14 @@
+/// <reference path="graphics.ts"/>
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="graphics.ts"/>
 var VTile = (function (_super) {
     __extends(VTile, _super);
     function VTile(texture, walkable) {
-        if (walkable === void 0) { walkable = true; }
+        if (walkable === void 0) { walkable = false; }
         _super.call(this, texture);
         this.walkable = walkable;
     }
@@ -21,8 +21,7 @@ var TileSet = (function () {
         for (var i = 0; i < sheet.sprites.length; i++) {
             this.tiles.push(new VTile(sheet.sprites[i]));
         }
-        this.tiles.push(new VTile(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-        this.tiles[1].walkable = false;
+        this.tiles[0].walkable = true;
     }
     return TileSet;
 })();
@@ -43,7 +42,7 @@ var TileMap = (function () {
         if (x == this.size.width || x < 0 || y == this.size.height || y < 0)
             return undefined;
         var tileVal = this.tiles[x + (y * this.size.width)];
-        return this.tileSet.tiles[tileVal];
+        return (new MetaTile(this.tileSet.tiles[tileVal], x, y, tileVal));
     };
     TileMap.prototype.setTileSet = function (set) {
         this.tileSet = set;

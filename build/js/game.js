@@ -19,33 +19,33 @@ var Game = (function () {
     }
     Game.prototype.init = function () {
         console.log("Initializing...");
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dimension(1, 1)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dimension(1, 1), new Point(0, 8)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dimension(10, 1)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dimension(10, 1), new Point(0, 8)));
         SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dimension(10, 1), new Point(0, 16)));
         Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
         this.World = new Level();
-        this.pEntity = new Entity();
-        this.pEntity.addComponent(new InputComponent());
-        this.pEntity.addComponent(new MovementComponent());
-        this.pEntity.addComponent(new AudioComponent('boop3.wav'));
-        this.pEntity.addComponent(new LevelComponent(this.World));
-        this.pEntity.addComponent(new PositionComponent(1, 1));
-        this.pEntity.addComponent(new AABBComponent(8, 8));
-        this.pEntity.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-        for (var i = 0; i < 30; i++) {
-            var temp = new Entity();
-            temp.addComponent(new PositionComponent(i + 1, 3));
-            temp.addComponent(new AABBComponent(8, 8));
-            temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
-            this.entities.push(temp);
+        {
+            var e = this.pEntity = new Entity();
+            e.add(new InputC());
+            e.add(new MovementC());
+            e.add(new AudioC('boop3.wav'));
+            e.add(new LevelC(this.World));
+            e.add(new PositionC(1, 1));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
+            this.pEntity = e;
+            this.World.entities.push(this.pEntity);
         }
-        for (var i = 0; i < 15; i++) {
-            var temp = new Entity();
-            temp.addComponent(new PositionComponent(((Math.random() * 28) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            temp.addComponent(new LevelComponent(this.World));
-            temp.addComponent(new AABBComponent(8, 8));
-            temp.addComponent(new SpriteComponent(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-            this.World.entities.push(temp);
+        {
+            var e = this.hEntity = new Entity();
+            e.add(new PositionC(1, this.World.map.size.height - 2));
+            e.add(new MovementC());
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
+            e.add(new AIHeroC());
+            this.hEntity = e;
+            this.World.entities.push(e);
         }
     };
     Game.prototype.update = function (delta) {
@@ -54,6 +54,11 @@ var Game = (function () {
                 this.state = "GameMaze";
                 break;
             case "GameMaze":
+                this.hEntity["aihero"].movementCooldown -= delta;
+                AIMovement(this.hEntity);
+                if (this.hEntity["movement"].x != 0 || this.hEntity["movement"].y != 0)
+                    collision(this.hEntity);
+                movement(this.hEntity);
                 input(this.pEntity);
                 if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
                     collision(this.pEntity);
@@ -85,7 +90,7 @@ var Game = (function () {
                         draw(this.ctx, entity);
                     }
                 }
-                if (this.pEntity["sprite"].redraw || this.change) {
+                if (this.pEntity["sprite"].redraw || this.hEntity["sprite"].redraw || this.change) {
                     this.World.map.draw(this.ctx);
                     draw(this.ctx, this.pEntity);
                     for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {

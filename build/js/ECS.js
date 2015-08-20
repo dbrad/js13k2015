@@ -5,7 +5,7 @@ var Entity = (function () {
         this.components = {};
         this.id = Entity.autoID++;
     }
-    Entity.prototype.addComponent = function (c) {
+    Entity.prototype.add = function (c) {
         if (!this.components[c.name])
             this._count++;
         this.components[c.name] = c;
@@ -14,72 +14,80 @@ var Entity = (function () {
     Entity.autoID = 0;
     return Entity;
 })();
-var PositionComponent = (function () {
-    function PositionComponent(x, y) {
+var PositionC = (function () {
+    function PositionC(x, y) {
         this.name = "pos";
         this.x = x;
         this.y = y;
     }
-    return PositionComponent;
+    return PositionC;
 })();
-var AABBComponent = (function () {
-    function AABBComponent(width, height) {
+var AABBC = (function () {
+    function AABBC(width, height) {
         this.name = "aabb";
         this.width = width;
         this.height = height;
     }
-    return AABBComponent;
+    return AABBC;
 })();
-var SpriteComponent = (function () {
-    function SpriteComponent(image) {
+var SpriteC = (function () {
+    function SpriteC(image) {
         this.name = "sprite";
         this.redraw = true;
         this.image = image;
     }
-    return SpriteComponent;
+    return SpriteC;
 })();
-var LevelComponent = (function () {
-    function LevelComponent(level) {
+var LevelC = (function () {
+    function LevelC(level) {
         this.name = "level";
         this.level = level;
     }
-    return LevelComponent;
+    return LevelC;
 })();
-var LayerComponent = (function () {
-    function LayerComponent(layer) {
+var LayerC = (function () {
+    function LayerC(layer) {
         if (layer === void 0) { layer = 0; }
         this.name = "layer";
         this.layer = layer;
     }
-    return LayerComponent;
+    return LayerC;
 })();
-var AudioComponent = (function () {
-    function AudioComponent(sound) {
+var AudioC = (function () {
+    function AudioC(sound) {
         this.name = "audio";
         this.sound = new AudioPool(sound, 3);
     }
-    return AudioComponent;
+    return AudioC;
 })();
-var MovementComponent = (function () {
-    function MovementComponent() {
+var MovementC = (function () {
+    function MovementC() {
         this.name = "movement";
         this.x = 0;
         this.y = 0;
     }
     ;
-    return MovementComponent;
+    return MovementC;
 })();
-var PlayerComponent = (function () {
-    function PlayerComponent() {
+var PlayerC = (function () {
+    function PlayerC() {
         this.name = "player";
         this.value = true;
     }
-    return PlayerComponent;
+    return PlayerC;
 })();
-var InputComponent = (function () {
-    function InputComponent() {
+var InputC = (function () {
+    function InputC() {
         this.name = "input";
         this.value = true;
     }
-    return InputComponent;
+    return InputC;
+})();
+var AIHeroC = (function () {
+    function AIHeroC() {
+        this.name = "aihero";
+        this.movementCooldown = 500;
+        this.value = true;
+    }
+    return AIHeroC;
 })();

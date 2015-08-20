@@ -17,7 +17,7 @@ class Entity {
         this.id = Entity.autoID++;
     }
 
-    addComponent(c: Component): void {
+    add(c: Component): void {
         if (!this.components[c.name])
             this._count++;
         this.components[c.name] = c;
@@ -26,7 +26,7 @@ class Entity {
 }
 
 /** Components */
-class PositionComponent implements Component {
+class PositionC implements Component {
     name: string = "pos";
     x: number;
     y: number;
@@ -37,7 +37,7 @@ class PositionComponent implements Component {
     }
 }
 
-class AABBComponent implements Component {
+class AABBC implements Component {
     name: string = "aabb";
     width: number;
     height: number;
@@ -48,7 +48,7 @@ class AABBComponent implements Component {
     }
 }
 
-class SpriteComponent implements Component {
+class SpriteC implements Component {
     name: string = "sprite";
     image: HTMLCanvasElement;
     redraw: boolean = true;
@@ -58,7 +58,7 @@ class SpriteComponent implements Component {
     }
 }
 
-class LevelComponent implements Component {
+class LevelC implements Component {
     name: string = "level";
     level: Level;
 
@@ -67,7 +67,7 @@ class LevelComponent implements Component {
     }
 }
 
-class LayerComponent implements Component {
+class LayerC implements Component {
     name: string = "layer";
     layer: number;
 
@@ -76,7 +76,7 @@ class LayerComponent implements Component {
     }
 }
 
-class AudioComponent implements Component {
+class AudioC implements Component {
   name: string = "audio";
   sound: AudioPool;
 
@@ -85,18 +85,24 @@ class AudioComponent implements Component {
   }
 }
 
-class MovementComponent implements Component {
+class MovementC implements Component {
     name: string = "movement";
     x: number = 0;;
     y: number = 0;
 }
 
-class PlayerComponent implements Component {
+class PlayerC implements Component {
     name: string = "player";
     value: boolean = true;
 }
 
-class InputComponent implements Component {
+class InputC implements Component {
     name: string = "input";
+    value: boolean = true;
+}
+
+class AIHeroC implements Component {
+    name: string = "aihero";
+    movementCooldown: number = 500;
     value: boolean = true;
 }

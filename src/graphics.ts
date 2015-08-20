@@ -4,6 +4,7 @@ interface Context2D extends CanvasRenderingContext2D {
     webkitImageSmoothingEnabled: boolean;
 }
 
+// TODO(david): Maybe factor out Point and Dimension. x/y & w/h on each thing might take up less on compiled js.
 class Point {
     x: number;
     y: number;
@@ -31,7 +32,7 @@ class Dimension {
     }
 }
 
-/** An image with a size that can be drawn at a location. */
+//TODO(david): Probably merge this with VTile
 class Tile {
     texture: HTMLCanvasElement;
     size: Dimension;
@@ -48,6 +49,7 @@ class Tile {
     }
 }
 
+//TODO(david): Remove gutter handling for some space.
 class SpriteSheet {
     private image: any;
     sprites: HTMLCanvasElement[] = [];

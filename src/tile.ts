@@ -1,7 +1,10 @@
 /// <reference path="graphics.ts"/>
+
+//TODO(david): Merge with Tile
 class VTile extends Tile {
     walkable: boolean;
-    constructor(texture: HTMLCanvasElement, walkable: boolean = true) {
+
+    constructor(texture: HTMLCanvasElement, walkable: boolean = false) {
         super(texture);
         this.walkable = walkable;
     }
@@ -16,8 +19,7 @@ class TileSet {
         for (var i: number = 0; i < sheet.sprites.length; i++) {
             this.tiles.push(new VTile(sheet.sprites[i]));
         }
-        this.tiles.push(new VTile(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-        this.tiles[1].walkable = false;
+        this.tiles[0].walkable = true;
     }
 }
 
@@ -40,11 +42,11 @@ class TileMap {
     setTile(x: number, y: number, value: number): void {
         this.tiles[x + (y * this.size.width)] = value;
     }
-    getTile(x: number, y: number): VTile {
+    getTile(x: number, y: number): MetaTile {
         if (x == this.size.width || x < 0 || y == this.size.height || y < 0)
             return undefined;
         var tileVal: number = this.tiles[x + (y * this.size.width)];
-        return this.tileSet.tiles[tileVal];
+        return (new MetaTile(this.tileSet.tiles[tileVal], x, y, tileVal));
     }
 
     setTileSet(set: TileSet): void {

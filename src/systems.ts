@@ -61,6 +61,15 @@ function combat(e: Entity) {
 }
 
 function AIMovement(e: Entity) {
+    if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
+        e["aihero"].movementCooldown += 500;
+        if (e["movement"]) {
+            if(((Math.random() * 2) | 0) === 0) 
+                e["movement"].x = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
+            else 
+                e["movement"].y = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
+        }
+    }
     if (e["AIPath"] && e["AIPath"].ready) {
 
     }
@@ -77,7 +86,7 @@ function movement(e: Entity) {
 }
 
 function movementSound(e: Entity) {
-  if (e["audio"] && e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
-      e["audio"].sound.play();
-  }
+    if (e["audio"] && e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
+        e["audio"].sound.play();
+    }
 }
