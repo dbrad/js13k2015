@@ -25,35 +25,54 @@ function input(e) {
     }
 }
 function collision(e) {
-    if (e["level"]) {
+    if (e["level"] && e["collision"]) {
         var tile = e["level"].level.map.getTile(e["pos"].x + e["movement"].x, e["pos"].y + e["movement"].y);
         if (!tile || !tile.walkable) {
             e["movement"].x = 0;
             e["movement"].y = 0;
         }
-        else {
+        else if (e["collision"].type == CollisionTypes.ENTITY) {
             var occupied = false;
+            var o_entity;
             for (var _i = 0, _a = e["level"].level.entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
                 occupied = occupied || ((entity["pos"].x == (e["pos"].x + e["movement"].x))
-                    && (entity["pos"].y == (e["pos"].y + e["movement"].y)));
-                if (occupied)
+                    && (entity["pos"].y == (e["pos"].y + e["movement"].y))
+                    && (entity["collision"]));
+                if (occupied) {
+                    o_entity = entity;
                     break;
+                }
             }
             if (occupied) {
                 e["movement"].x = 0;
                 e["movement"].y = 0;
+                if (e["combat"]) {
+                    e["combat"].target = o_entity;
+                    console.log(e["combat"].target);
+                }
             }
         }
     }
 }
 function combat(e) {
-    if (e["combat"] && e["combat"].target) {
+    if (e["combat"] && e["combat"].target && e["combat"].target["combat"]) {
+        if (!e["combat"].target["combat"].alive) {
+            e["combat"].target = undefined;
+        }
+        else {
+        }
+    }
+    else {
+        e["combat"].target = undefined;
     }
 }
 function AIMovement(e) {
-    if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
-        e["aihero"].movementCooldown += 500;
+    if (e["combat"] && e["combat"].target) {
+        return;
+    }
+    else if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
+        e["aihero"].movementCooldown += 1000;
         if (e["movement"]) {
             if (((Math.random() * 2) | 0) === 0)
                 e["movement"].x = ((Math.random() * 2) | 0) === 0 ? -1 : 1;

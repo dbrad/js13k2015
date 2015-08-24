@@ -19,8 +19,12 @@ class Level {
     entities: Entity[];
     map: TileMap;
     static defaultTileSet: TileSet;
+    playerSpawn: Pt;
+    heroSpawn: Pt;
+    bossSpawn: Pt;
+    validEnemySpawns: Pt[] = [];
 
-    constructor(map: TileMap = new TileMap(Dimension.from(25, 25), Point.from(8, 32))) {
+    constructor(map: TileMap = new TileMap(Dm.from(25, 25), Pt.from(8, 32))) {
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         this.generateLevel();
@@ -61,7 +65,7 @@ class Level {
             this.map.tiles[this.map.size.width * i] = this.map.tiles[(this.map.size.width * (i + 1)) - 1] = 2;
         }
 
-        var seed: Point = Point.from(1, 1);
+        var seed: Pt = Pt.from(1, 1);
         var currentTile: MetaTile = this.map.getTile(seed.x, seed.y);
         currentTile.value = 0;
         this.map.setTile(currentTile.x, currentTile.y, 0);
@@ -88,5 +92,13 @@ class Level {
 
             walls = walls.filter(function(obj, index, array) { return (obj.value === 1); });
         } while (walls.length != 0)
+    }
+
+    generatePath() {
+
+    }
+
+    setSpawns(): void {
+
     }
 }

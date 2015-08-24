@@ -3,7 +3,7 @@
         "module": "commonjs",
         "noImplicitAny": false,
         "removeComments": true,
-        "preserveConstEnums": true,
+        "preserveConstEnums": false,
         "outDir": "build/js/",
         "target": "es5",
         "noEmitOnError": true

@@ -44,34 +44,34 @@ var Input;
     })(Keyboard = Input.Keyboard || (Input.Keyboard = {}));
 })(Input || (Input = {}));
 
-var Point = (function () {
-    function Point(x, y) {
+var Pt = (function () {
+    function Pt(x, y) {
         if (x === void 0) { x = 0; }
         if (y === void 0) { y = 0; }
         this.x = x;
         this.y = y;
     }
-    Point.from = function (x, y) {
-        return new Point(x, y);
+    Pt.from = function (x, y) {
+        return new Pt(x, y);
     };
-    return Point;
+    return Pt;
 })();
-var Dimension = (function () {
-    function Dimension(width, height) {
+var Dm = (function () {
+    function Dm(width, height) {
         if (width === void 0) { width = 0; }
         if (height === void 0) { height = 0; }
         this.width = width;
         this.height = height;
     }
-    Dimension.from = function (width, height) {
-        return new Dimension(width, height);
+    Dm.from = function (width, height) {
+        return new Dm(width, height);
     };
-    return Dimension;
+    return Dm;
 })();
 var Tile = (function () {
     function Tile(texture) {
         this.texture = texture;
-        this.size = new Dimension(texture.width, texture.height);
+        this.size = new Dm(texture.width, texture.height);
     }
     Tile.prototype.draw = function (ctx, x, y) {
         ctx.drawImage(this.texture, 0, 0, this.size.width, this.size.height, x, y, this.size.width, this.size.height);
@@ -81,8 +81,8 @@ var Tile = (function () {
 var SpriteSheet = (function () {
     function SpriteSheet(imageName, sheetName, ts, gutter, ss, offset) {
         if (gutter === void 0) { gutter = 0; }
-        if (ss === void 0) { ss = new Dimension(0, 0); }
-        if (offset === void 0) { offset = new Point(0, 0); }
+        if (ss === void 0) { ss = new Dm(0, 0); }
+        if (offset === void 0) { offset = new Pt(0, 0); }
         this.sprites = [];
         this.name = sheetName;
         this.offset = offset;
@@ -201,8 +201,8 @@ var TileSet = (function () {
 })();
 var TileMap = (function () {
     function TileMap(size, pos) {
-        if (size === void 0) { size = new Dimension(1, 1); }
-        if (pos === void 0) { pos = new Point(0, 0); }
+        if (size === void 0) { size = new Dm(1, 1); }
+        if (pos === void 0) { pos = new Pt(0, 0); }
         this.cached = false;
         this.size = size;
         this.pos = pos;
@@ -259,7 +259,8 @@ var MetaTile = (function (_super) {
 })(VTile);
 var Level = (function () {
     function Level(map) {
-        if (map === void 0) { map = new TileMap(Dimension.from(25, 25), Point.from(8, 32)); }
+        if (map === void 0) { map = new TileMap(Dm.from(25, 25), Pt.from(8, 32)); }
+        this.validEnemySpawns = [];
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         this.generateLevel();
@@ -300,7 +301,7 @@ var Level = (function () {
         for (var i = 1; i < this.map.size.height - 1; i++) {
             this.map.tiles[this.map.size.width * i] = this.map.tiles[(this.map.size.width * (i + 1)) - 1] = 2;
         }
-        var seed = Point.from(1, 1);
+        var seed = Pt.from(1, 1);
         var currentTile = this.map.getTile(seed.x, seed.y);
         currentTile.value = 0;
         this.map.setTile(currentTile.x, currentTile.y, 0);
@@ -325,6 +326,10 @@ var Level = (function () {
             }
             walls = walls.filter(function (obj, index, array) { return (obj.value === 1); });
         } while (walls.length != 0);
+    };
+    Level.prototype.generatePath = function () {
+    };
+    Level.prototype.setSpawns = function () {
     };
     return Level;
 })();
@@ -397,8 +402,20 @@ var MovementC = (function () {
         this.x = 0;
         this.y = 0;
     }
-    ;
     return MovementC;
+})();
+var CollisionTypes;
+(function (CollisionTypes) {
+    CollisionTypes[CollisionTypes["ENTITY"] = 0] = "ENTITY";
+    CollisionTypes[CollisionTypes["LEVEL"] = 1] = "LEVEL";
+})(CollisionTypes || (CollisionTypes = {}));
+var CollisionC = (function () {
+    function CollisionC(type) {
+        if (type === void 0) { type = CollisionTypes.LEVEL; }
+        this.name = "collision";
+        this.type = type;
+    }
+    return CollisionC;
 })();
 var PlayerC = (function () {
     function PlayerC() {
@@ -406,6 +423,13 @@ var PlayerC = (function () {
         this.value = true;
     }
     return PlayerC;
+})();
+var CombatC = (function () {
+    function CombatC() {
+        this.name = "combat";
+        this.alive = true;
+    }
+    return CombatC;
 })();
 var InputC = (function () {
     function InputC() {
@@ -417,7 +441,7 @@ var InputC = (function () {
 var AIHeroC = (function () {
     function AIHeroC() {
         this.name = "aihero";
-        this.movementCooldown = 500;
+        this.movementCooldown = 1000;
         this.value = true;
     }
     return AIHeroC;
@@ -450,35 +474,54 @@ function input(e) {
     }
 }
 function collision(e) {
-    if (e["level"]) {
+    if (e["level"] && e["collision"]) {
         var tile = e["level"].level.map.getTile(e["pos"].x + e["movement"].x, e["pos"].y + e["movement"].y);
         if (!tile || !tile.walkable) {
             e["movement"].x = 0;
             e["movement"].y = 0;
         }
-        else {
+        else if (e["collision"].type == CollisionTypes.ENTITY) {
             var occupied = false;
+            var o_entity;
             for (var _i = 0, _a = e["level"].level.entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
                 occupied = occupied || ((entity["pos"].x == (e["pos"].x + e["movement"].x))
-                    && (entity["pos"].y == (e["pos"].y + e["movement"].y)));
-                if (occupied)
+                    && (entity["pos"].y == (e["pos"].y + e["movement"].y))
+                    && (entity["collision"]));
+                if (occupied) {
+                    o_entity = entity;
                     break;
+                }
             }
             if (occupied) {
                 e["movement"].x = 0;
                 e["movement"].y = 0;
+                if (e["combat"]) {
+                    e["combat"].target = o_entity;
+                    console.log(e["combat"].target);
+                }
             }
         }
     }
 }
 function combat(e) {
-    if (e["combat"] && e["combat"].target) {
+    if (e["combat"] && e["combat"].target && e["combat"].target["combat"]) {
+        if (!e["combat"].target["combat"].alive) {
+            e["combat"].target = undefined;
+        }
+        else {
+        }
+    }
+    else {
+        e["combat"].target = undefined;
     }
 }
 function AIMovement(e) {
-    if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
-        e["aihero"].movementCooldown += 500;
+    if (e["combat"] && e["combat"].target) {
+        return;
+    }
+    else if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
+        e["aihero"].movementCooldown += 1000;
         if (e["movement"]) {
             if (((Math.random() * 2) | 0) === 0)
                 e["movement"].x = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
@@ -512,10 +555,11 @@ function movementSound(e) {
 var Game = (function () {
     function Game(screen) {
         this.entities = [];
-        this.state = "MainMenu";
         this.change = true;
         this.clearScreen = true;
         this.then = performance.now();
+        this.timePaused = 0;
+        this.deltaPaused = 0;
         console.log("Setting up screen");
         this.screen = screen;
         this.ctx = screen.getContext('2d');
@@ -524,16 +568,17 @@ var Game = (function () {
     }
     Game.prototype.init = function () {
         console.log("Initializing...");
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dimension(10, 1)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dimension(10, 1), new Point(0, 8)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dimension(10, 1), new Point(0, 16)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(10, 1)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(10, 1), new Pt(0, 8)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 16)));
         Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
         this.World = new Level();
         {
             var e = this.pEntity = new Entity();
             e.add(new InputC());
             e.add(new MovementC());
-            e.add(new AudioC('boop3.wav'));
+            e.add(new CollisionC(CollisionTypes.LEVEL));
+            e.add(new AudioC('gblip.wav'));
             e.add(new LevelC(this.World));
             e.add(new PositionC(1, 1));
             e.add(new AABBC(8, 8));
@@ -545,13 +590,17 @@ var Game = (function () {
             var e = this.hEntity = new Entity();
             e.add(new PositionC(1, this.World.map.size.height - 2));
             e.add(new MovementC());
+            e.add(new AudioC('hstep.wav'));
+            e.add(new CollisionC());
             e.add(new LevelC(this.World));
             e.add(new AABBC(8, 8));
             e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
+            e.add(new CombatC());
             e.add(new AIHeroC());
             this.hEntity = e;
             this.World.entities.push(e);
         }
+        this.state = "MainMenu";
     };
     Game.prototype.update = function (delta) {
         switch (this.state) {
@@ -559,10 +608,18 @@ var Game = (function () {
                 this.state = "GameMaze";
                 break;
             case "GameMaze":
+                if (this.deltaPaused > 0) {
+                    delta -= this.deltaPaused;
+                    if (delta < 0)
+                        delta = 0;
+                    this.deltaPaused = 0;
+                }
                 this.hEntity["aihero"].movementCooldown -= delta;
+                combat(this.hEntity);
                 AIMovement(this.hEntity);
                 if (this.hEntity["movement"].x != 0 || this.hEntity["movement"].y != 0)
                     collision(this.hEntity);
+                movementSound(this.hEntity);
                 movement(this.hEntity);
                 input(this.pEntity);
                 if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
@@ -570,7 +627,7 @@ var Game = (function () {
                 movementSound(this.pEntity);
                 movement(this.pEntity);
                 break;
-            case "GameMenu":
+            case "GamePause":
                 break;
             case "GameOver":
                 this.state = "MainMenu";
@@ -584,7 +641,6 @@ var Game = (function () {
             case "MainMenu":
                 break;
             case "GameMaze":
-            case "GameMenu":
                 if (this.clearScreen) {
                     this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
                     this.clearScreen = false;
@@ -597,11 +653,24 @@ var Game = (function () {
                 }
                 if (this.pEntity["sprite"].redraw || this.hEntity["sprite"].redraw || this.change) {
                     this.World.map.draw(this.ctx);
-                    draw(this.ctx, this.pEntity);
                     for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
                         var entity = _c[_b];
                         draw(this.ctx, entity);
                     }
+                    draw(this.ctx, this.pEntity);
+                    this.change = false;
+                }
+                break;
+            case "GamePause":
+                if (this.change) {
+                    this.ctx.globalAlpha = 0.7;
+                    this.ctx.fillStyle = "black";
+                    this.ctx.fillRect(0, 0, this.screen.width, this.screen.height);
+                    this.ctx.globalAlpha = 1.0;
+                    this.ctx.font = "18px Verdana";
+                    this.ctx.textAlign = "center";
+                    this.ctx.fillStyle = "white";
+                    this.ctx.fillText('PAUSED', ((this.screen.width / 2) | 0), ((this.screen.height / 2) | 0));
                     this.change = false;
                 }
                 break;
@@ -627,6 +696,21 @@ var Game = (function () {
         console.log("Game stopped");
         window.cancelAnimationFrame(this._loopHandle);
     };
+    Game.prototype.pause = function () {
+        if (this.state === "GameMaze") {
+            this.state = "GamePause";
+            this.change = true;
+            this.timePaused = performance.now();
+        }
+    };
+    Game.prototype.unpause = function () {
+        if (this.state === "GamePause") {
+            this.state = "GameMaze";
+            this.change = this.clearScreen = true;
+            this.deltaPaused = performance.now() - this.timePaused;
+            this.timePaused = 0;
+        }
+    };
     return Game;
 })();
 function onResize() {
@@ -651,6 +735,8 @@ window.onload = function () {
     ImageCache.Loader.add("sheet", "sheet.png");
     ImageCache.Loader.load(function () {
         game.init();
+        window.onblur = game.pause.bind(game);
+        window.onfocus = game.unpause.bind(game);
         game.run();
     });
 };

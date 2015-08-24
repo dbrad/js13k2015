@@ -66,8 +66,20 @@ var MovementC = (function () {
         this.x = 0;
         this.y = 0;
     }
-    ;
     return MovementC;
+})();
+var CollisionTypes;
+(function (CollisionTypes) {
+    CollisionTypes[CollisionTypes["ENTITY"] = 0] = "ENTITY";
+    CollisionTypes[CollisionTypes["LEVEL"] = 1] = "LEVEL";
+})(CollisionTypes || (CollisionTypes = {}));
+var CollisionC = (function () {
+    function CollisionC(type) {
+        if (type === void 0) { type = CollisionTypes.LEVEL; }
+        this.name = "collision";
+        this.type = type;
+    }
+    return CollisionC;
 })();
 var PlayerC = (function () {
     function PlayerC() {
@@ -75,6 +87,13 @@ var PlayerC = (function () {
         this.value = true;
     }
     return PlayerC;
+})();
+var CombatC = (function () {
+    function CombatC() {
+        this.name = "combat";
+        this.alive = true;
+    }
+    return CombatC;
 })();
 var InputC = (function () {
     function InputC() {
@@ -86,7 +105,7 @@ var InputC = (function () {
 var AIHeroC = (function () {
     function AIHeroC() {
         this.name = "aihero";
-        this.movementCooldown = 500;
+        this.movementCooldown = 1000;
         this.value = true;
     }
     return AIHeroC;

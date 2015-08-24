@@ -1,31 +1,31 @@
-var Point = (function () {
-    function Point(x, y) {
+var Pt = (function () {
+    function Pt(x, y) {
         if (x === void 0) { x = 0; }
         if (y === void 0) { y = 0; }
         this.x = x;
         this.y = y;
     }
-    Point.from = function (x, y) {
-        return new Point(x, y);
+    Pt.from = function (x, y) {
+        return new Pt(x, y);
     };
-    return Point;
+    return Pt;
 })();
-var Dimension = (function () {
-    function Dimension(width, height) {
+var Dm = (function () {
+    function Dm(width, height) {
         if (width === void 0) { width = 0; }
         if (height === void 0) { height = 0; }
         this.width = width;
         this.height = height;
     }
-    Dimension.from = function (width, height) {
-        return new Dimension(width, height);
+    Dm.from = function (width, height) {
+        return new Dm(width, height);
     };
-    return Dimension;
+    return Dm;
 })();
 var Tile = (function () {
     function Tile(texture) {
         this.texture = texture;
-        this.size = new Dimension(texture.width, texture.height);
+        this.size = new Dm(texture.width, texture.height);
     }
     Tile.prototype.draw = function (ctx, x, y) {
         ctx.drawImage(this.texture, 0, 0, this.size.width, this.size.height, x, y, this.size.width, this.size.height);
@@ -35,8 +35,8 @@ var Tile = (function () {
 var SpriteSheet = (function () {
     function SpriteSheet(imageName, sheetName, ts, gutter, ss, offset) {
         if (gutter === void 0) { gutter = 0; }
-        if (ss === void 0) { ss = new Dimension(0, 0); }
-        if (offset === void 0) { offset = new Point(0, 0); }
+        if (ss === void 0) { ss = new Dm(0, 0); }
+        if (offset === void 0) { offset = new Pt(0, 0); }
         this.sprites = [];
         this.name = sheetName;
         this.offset = offset;

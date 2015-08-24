@@ -4,8 +4,8 @@ interface Context2D extends CanvasRenderingContext2D {
     webkitImageSmoothingEnabled: boolean;
 }
 
-// TODO(david): Maybe factor out Point and Dimension. x/y & w/h on each thing might take up less on compiled js.
-class Point {
+// TODO(david): Maybe factor out Pt and Dm. x/y & w/h on each thing might take up less on compiled js.
+class Pt {
     x: number;
     y: number;
 
@@ -15,11 +15,11 @@ class Point {
     }
 
     static from(x: number, y: number) {
-        return new Point(x, y);
+        return new Pt(x, y);
     }
 }
 
-class Dimension {
+class Dm {
     width: number;
     height: number;
     constructor(width: number = 0, height: number = 0) {
@@ -28,18 +28,18 @@ class Dimension {
     }
 
     static from(width: number, height: number) {
-        return new Dimension(width, height);
+        return new Dm(width, height);
     }
 }
 
 //TODO(david): Probably merge this with VTile
 class Tile {
     texture: HTMLCanvasElement;
-    size: Dimension;
+    size: Dm;
 
     constructor(texture: HTMLCanvasElement) {
         this.texture = texture;
-        this.size = new Dimension(texture.width, texture.height);
+        this.size = new Dm(texture.width, texture.height);
     }
 
     draw(ctx: any, x: number, y: number): void {
@@ -56,8 +56,8 @@ class SpriteSheet {
 
     name: string;
     gutter: number;
-    offset: Point;
-    ss: Dimension;
+    offset: Pt;
+    ss: Dm;
     ts: number;
 
     spritesPerRow: number;
@@ -65,7 +65,7 @@ class SpriteSheet {
 
     constructor(
         imageName: string, sheetName: string, ts: number, gutter: number = 0,
-        ss: Dimension = new Dimension(0, 0), offset: Point = new Point(0, 0)) {
+        ss: Dm = new Dm(0, 0), offset: Pt = new Pt(0, 0)) {
 
         this.name = sheetName;
         this.offset = offset;

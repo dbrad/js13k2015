@@ -27,8 +27,8 @@ var TileSet = (function () {
 })();
 var TileMap = (function () {
     function TileMap(size, pos) {
-        if (size === void 0) { size = new Dimension(1, 1); }
-        if (pos === void 0) { pos = new Point(0, 0); }
+        if (size === void 0) { size = new Dm(1, 1); }
+        if (pos === void 0) { pos = new Pt(0, 0); }
         this.cached = false;
         this.size = size;
         this.pos = pos;

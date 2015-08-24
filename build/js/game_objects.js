@@ -18,7 +18,8 @@ var MetaTile = (function (_super) {
 })(VTile);
 var Level = (function () {
     function Level(map) {
-        if (map === void 0) { map = new TileMap(Dimension.from(25, 25), Point.from(8, 32)); }
+        if (map === void 0) { map = new TileMap(Dm.from(25, 25), Pt.from(8, 32)); }
+        this.validEnemySpawns = [];
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         this.generateLevel();
@@ -59,7 +60,7 @@ var Level = (function () {
         for (var i = 1; i < this.map.size.height - 1; i++) {
             this.map.tiles[this.map.size.width * i] = this.map.tiles[(this.map.size.width * (i + 1)) - 1] = 2;
         }
-        var seed = Point.from(1, 1);
+        var seed = Pt.from(1, 1);
         var currentTile = this.map.getTile(seed.x, seed.y);
         currentTile.value = 0;
         this.map.setTile(currentTile.x, currentTile.y, 0);
@@ -84,6 +85,10 @@ var Level = (function () {
             }
             walls = walls.filter(function (obj, index, array) { return (obj.value === 1); });
         } while (walls.length != 0);
+    };
+    Level.prototype.generatePath = function () {
+    };
+    Level.prototype.setSpawns = function () {
     };
     return Level;
 })();

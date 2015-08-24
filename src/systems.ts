@@ -32,37 +32,54 @@ function input(e: Entity) {
 }
 
 function collision(e: Entity) {
-    if (e["level"]) {
+    if (e["level"] && e["collision"]) {
         var tile = e["level"].level.map.getTile(
             e["pos"].x + e["movement"].x, e["pos"].y + e["movement"].y);
         if (!tile || !tile.walkable) {
             e["movement"].x = 0;
             e["movement"].y = 0;
-        } else {
-            var occupied = false;
+        } else if (e["collision"].type == CollisionTypes.ENTITY) {
+            var occupied: boolean = false;
+            var o_entity: Entity;
             for (var entity of e["level"].level.entities) {
                 occupied = occupied || ((entity["pos"].x == (e["pos"].x + e["movement"].x))
-                    && (entity["pos"].y == (e["pos"].y + e["movement"].y)));
-                if (occupied)
+                    && (entity["pos"].y == (e["pos"].y + e["movement"].y))
+                    && (entity["collision"]));
+                if (occupied) {
+                    o_entity = entity;
                     break;
+                }
             }
             if (occupied) {
                 e["movement"].x = 0;
                 e["movement"].y = 0;
+                if (e["combat"]) {
+                    e["combat"].target = o_entity;
+                    console.log(e["combat"].target);
+                }
             }
         }
     }
 }
 
 function combat(e: Entity) {
-    if (e["combat"] && e["combat"].target) {
-
+    if (e["combat"] && e["combat"].target && e["combat"].target["combat"]) {
+        if (!e["combat"].target["combat"].alive) {
+            e["combat"].target = undefined;
+        } else {
+            // DO COMBAT!
+        }
+    } else { // Non-Combat Target
+        e["combat"].target = undefined;
     }
 }
 
 function AIMovement(e: Entity) {
-    if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
-        e["aihero"].movementCooldown += 500;
+    if (e["combat"] && e["combat"].target) {
+        return;
+    } else if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
+        e["aihero"].movementCooldown += 1000;
+        // Place Holder random movement
         if (e["movement"]) {
             if(((Math.random() * 2) | 0) === 0) 
                 e["movement"].x = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
@@ -71,7 +88,7 @@ function AIMovement(e: Entity) {
         }
     }
     if (e["AIPath"] && e["AIPath"].ready) {
-
+        // Follow A* path
     }
 }
 
@@ -79,7 +96,6 @@ function movement(e: Entity) {
     if (e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
         e["pos"].x += e["movement"].x;
         e["pos"].y += e["movement"].y;
-
         e["movement"].x = e["movement"].y = 0;
         e["sprite"].redraw = true;
     }

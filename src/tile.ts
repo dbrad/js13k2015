@@ -28,11 +28,11 @@ class TileMap {
     private cached: boolean = false;
     tileSet: TileSet;
     tiles: number[];
-    size: Dimension;
-    pos: Point;
+    size: Dm;
+    pos: Pt;
     layer: number;
 
-    constructor(size: Dimension = new Dimension(1, 1), pos: Point = new Point(0, 0)) {
+    constructor(size: Dm = new Dm(1, 1), pos: Pt = new Pt(0, 0)) {
         this.size = size;
         this.pos = pos;
         this.tiles = [];

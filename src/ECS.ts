@@ -87,13 +87,30 @@ class AudioC implements Component {
 
 class MovementC implements Component {
     name: string = "movement";
-    x: number = 0;;
+    x: number = 0;
     y: number = 0;
+}
+
+enum CollisionTypes {
+    ENTITY, LEVEL
+}
+class CollisionC implements Component {
+    name: string = "collision";
+    type: CollisionTypes;
+    constructor(type: CollisionTypes = CollisionTypes.LEVEL) {
+        this.type = type;
+    }
 }
 
 class PlayerC implements Component {
     name: string = "player";
     value: boolean = true;
+}
+
+class CombatC implements Component {
+    name: string = "combat";
+    target: Entity;
+    alive: boolean = true;
 }
 
 class InputC implements Component {
@@ -103,6 +120,6 @@ class InputC implements Component {
 
 class AIHeroC implements Component {
     name: string = "aihero";
-    movementCooldown: number = 500;
+    movementCooldown: number = 1000;
     value: boolean = true;
 }

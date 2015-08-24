@@ -29,9 +29,9 @@ class Game {
     init(): void {
         console.log("Initializing...");
         /** Initalize Player and World */
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dimension(10, 1)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dimension(10, 1), new Point(0, 8)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dimension(10, 1), new Point(0, 16)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(10, 1)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(10, 1), new Pt(0, 8)));
+        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 16)));
 
         Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
         // Full screen is 32 x 30
@@ -41,7 +41,8 @@ class Game {
             var e: Entity = this.pEntity = new Entity();
             e.add(new InputC());
             e.add(new MovementC());
-            e.add(new AudioC('boop3.wav'));
+            e.add(new CollisionC(CollisionTypes.LEVEL));
+            e.add(new AudioC('gblip.wav'));
             e.add(new LevelC(this.World));
             e.add(new PositionC(1, 1));
             e.add(new AABBC(8, 8));
@@ -54,9 +55,12 @@ class Game {
             var e: Entity = this.hEntity = new Entity();
             e.add(new PositionC(1, this.World.map.size.height - 2));
             e.add(new MovementC());
+            e.add(new AudioC('hstep.wav'));
+            e.add(new CollisionC());
             e.add(new LevelC(this.World));
             e.add(new AABBC(8, 8));
             e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
+            e.add(new CombatC());
             e.add(new AIHeroC());
             this.hEntity = e;
             this.World.entities.push(e);
@@ -78,21 +82,29 @@ class Game {
         //     temp.add(new SpriteC(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
         //     this.entities.push(temp);
         // }
-
+        this.state = "MainMenu";
     }
 
     /** Update */
-    state: string = "MainMenu";
+    private state: string;
     update(delta: number): void {
         switch (this.state) {
             case "MainMenu":
                 this.state = "GameMaze";
                 break;
             case "GameMaze":
+                if(this.deltaPaused > 0) {
+                    delta -= this.deltaPaused;
+                    if (delta < 0) delta = 0;
+                    this.deltaPaused = 0;
+                }
+                
                 this.hEntity["aihero"].movementCooldown -= delta;
+                combat(this.hEntity);
                 AIMovement(this.hEntity);
                 if (this.hEntity["movement"].x != 0 || this.hEntity["movement"].y != 0)
                     collision(this.hEntity);
+                movementSound(this.hEntity);
                 movement(this.hEntity);
                 
                 input(this.pEntity);
@@ -102,7 +114,7 @@ class Game {
                 movement(this.pEntity);
                 
                 break;
-            case "GameMenu":
+            case "GamePause":
                 break;
             case "GameOver":
                 this.state = "MainMenu";
@@ -120,7 +132,6 @@ class Game {
             case "MainMenu":
                 break;
             case "GameMaze":
-            case "GameMenu":
                 if (this.clearScreen) {
                     this.ctx.clearRect(0, 0, this.screen.width, this.screen.height);
                     this.clearScreen = false;
@@ -133,10 +144,23 @@ class Game {
 
                 if (this.pEntity["sprite"].redraw || this.hEntity["sprite"].redraw || this.change) {
                     this.World.map.draw(this.ctx);
-                    draw(this.ctx, this.pEntity);
                     for (var entity of this.World.entities) {
                         draw(this.ctx, entity);
                     }
+                    draw(this.ctx, this.pEntity);
+                    this.change = false;
+                }
+                break;
+            case "GamePause":
+                if (this.change) {
+                    this.ctx.globalAlpha = 0.7;
+                    this.ctx.fillStyle = "black";
+                    this.ctx.fillRect(0, 0, this.screen.width, this.screen.height);
+                    this.ctx.globalAlpha = 1.0;
+                    this.ctx.font = "18px Verdana";
+                    this.ctx.textAlign = "center";
+                    this.ctx.fillStyle = "white";
+                    this.ctx.fillText('PAUSED', ((this.screen.width / 2) | 0), ((this.screen.height / 2) | 0) );
                     this.change = false;
                 }
                 break;
@@ -167,6 +191,24 @@ class Game {
         console.log("Game stopped")
         window.cancelAnimationFrame(this._loopHandle);
     }
+
+    private timePaused: number = 0;
+    private deltaPaused: number = 0;
+    pause(): void {
+        if(this.state === "GameMaze") {
+            this.state = "GamePause";
+            this.change = true;
+            this.timePaused = performance.now();
+        }
+    }
+    unpause(): void {
+        if(this.state === "GamePause") {
+            this.state = "GameMaze";
+            this.change = this.clearScreen = true;
+            this.deltaPaused = performance.now() - this.timePaused;
+            this.timePaused = 0;
+        }
+    }
 }
 
 function onResize() {
@@ -195,6 +237,8 @@ window.onload = () => {
     ImageCache.Loader.add("sheet", "sheet.png");
     ImageCache.Loader.load(function() {
         game.init();
+        window.onblur = game.pause.bind(game);
+        window.onfocus = game.unpause.bind(game);
         game.run();
     })
 };
