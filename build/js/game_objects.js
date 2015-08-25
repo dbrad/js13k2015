@@ -1,8 +1,7 @@
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var MetaTile = (function (_super) {
     __extends(MetaTile, _super);
@@ -23,6 +22,8 @@ var Level = (function () {
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         this.generateLevel();
+        this.setSpawns();
+        this.generatePath();
         this.entities = [];
     }
     Level.prototype.getWall = function (px, py, x, y) {
@@ -87,6 +88,7 @@ var Level = (function () {
         } while (walls.length != 0);
     };
     Level.prototype.generatePath = function () {
+        this.AIPath = [];
     };
     Level.prototype.setSpawns = function () {
     };

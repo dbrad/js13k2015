@@ -23,11 +23,14 @@ class Level {
     heroSpawn: Pt;
     bossSpawn: Pt;
     validEnemySpawns: Pt[] = [];
+    AIPath: Pt[];
 
     constructor(map: TileMap = new TileMap(Dm.from(25, 25), Pt.from(8, 32))) {
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         this.generateLevel();
+        this.setSpawns();
+        this.generatePath();
         this.entities = [];
     }
 
@@ -75,7 +78,7 @@ class Level {
             if (currentTile)
                 walls = walls.concat(this.getWalls(currentTile.x, currentTile.y));
             var wallIndex: number = ((Math.random() * walls.length) | 0);
-            var tileToCheck: MetaTile = walls[wallIndex];            
+            var tileToCheck: MetaTile = walls[wallIndex];
             var nextTile: MetaTile = this.map.getTile(tileToCheck.x + tileToCheck.xd, tileToCheck.y + tileToCheck.yd);
 
             if (nextTile && (nextTile.value === 1)) {
@@ -95,7 +98,7 @@ class Level {
     }
 
     generatePath() {
-
+      this.AIPath = [];
     }
 
     setSpawns(): void {

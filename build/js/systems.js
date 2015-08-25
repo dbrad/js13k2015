@@ -80,7 +80,7 @@ function AIMovement(e) {
                 e["movement"].y = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
         }
     }
-    if (e["AIPath"] && e["AIPath"].ready) {
+    if (e["aihero"] && e["aihero"].pathReady) {
     }
 }
 function movement(e) {

@@ -121,5 +121,10 @@ class InputC implements Component {
 class AIHeroC implements Component {
     name: string = "aihero";
     movementCooldown: number = 1000;
-    value: boolean = true;
+    value: boolean = true
+    pathReady: boolean = true;
+    AIPath: Pt[];
+    constructor(path: Pt[] = []) {
+      this.AIPath = path;
+    }
 }

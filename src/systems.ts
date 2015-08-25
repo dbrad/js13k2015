@@ -81,13 +81,13 @@ function AIMovement(e: Entity) {
         e["aihero"].movementCooldown += 1000;
         // Place Holder random movement
         if (e["movement"]) {
-            if(((Math.random() * 2) | 0) === 0) 
+            if(((Math.random() * 2) | 0) === 0)
                 e["movement"].x = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
-            else 
+            else
                 e["movement"].y = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
         }
     }
-    if (e["AIPath"] && e["AIPath"].ready) {
+    if (e["aihero"] && e["aihero"].pathReady) {
         // Follow A* path
     }
 }

@@ -61,27 +61,38 @@ class Game {
             e.add(new AABBC(8, 8));
             e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
             e.add(new CombatC());
-            e.add(new AIHeroC());
+            e.add(new AIHeroC(this.World.AIPath));
             this.hEntity = e;
             this.World.entities.push(e);
         }
 
-        // for (var i: number = 0; i < 15; i++) {
-        //     var e: Entity = new Entity();
-        //     e.add(new PositionC(((Math.random() * 28) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-        //     e.add(new LevelC(this.World));
-        //     e.add(new AABBC(8, 8));
-        //     e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
-        //     this.World.entities.push(e);
-        // }
+        for (var i: number = 0; i < 5; i++) {
+            var e: Entity = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
+            this.World.entities.push(e);
+        }
 
-        // for (var i: number = 0; i < 30; i++) {
-        //     var temp = new Entity();
-        //     temp.add(new PositionC(i + 1, 3));
-        //     temp.add(new AABBC(8, 8));
-        //     temp.add(new SpriteC(SpriteSheetCache.spriteSheet("numbers").sprites[i % 10]));
-        //     this.entities.push(temp);
-        // }
+        for (var i: number = 0; i < 3; i++) {
+            var e: Entity = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[3]));
+            this.World.entities.push(e);
+        }
+
+        {
+          var e: Entity = new Entity();
+          e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+          e.add(new LevelC(this.World));
+          e.add(new AABBC(8, 8));
+          e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[4]));
+          this.World.entities.push(e);
+        }
+
         this.state = "MainMenu";
     }
 
@@ -98,7 +109,7 @@ class Game {
                     if (delta < 0) delta = 0;
                     this.deltaPaused = 0;
                 }
-                
+
                 this.hEntity["aihero"].movementCooldown -= delta;
                 combat(this.hEntity);
                 AIMovement(this.hEntity);
@@ -106,13 +117,13 @@ class Game {
                     collision(this.hEntity);
                 movementSound(this.hEntity);
                 movement(this.hEntity);
-                
+
                 input(this.pEntity);
                 if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
                     collision(this.pEntity);
                 movementSound(this.pEntity);
                 movement(this.pEntity);
-                
+
                 break;
             case "GamePause":
                 break;

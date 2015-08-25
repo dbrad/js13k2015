@@ -176,8 +176,7 @@ var AudioPool = (function () {
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var VTile = (function (_super) {
     __extends(VTile, _super);
@@ -242,8 +241,7 @@ var TileMap = (function () {
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var MetaTile = (function (_super) {
     __extends(MetaTile, _super);
@@ -264,6 +262,8 @@ var Level = (function () {
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         this.generateLevel();
+        this.setSpawns();
+        this.generatePath();
         this.entities = [];
     }
     Level.prototype.getWall = function (px, py, x, y) {
@@ -328,6 +328,7 @@ var Level = (function () {
         } while (walls.length != 0);
     };
     Level.prototype.generatePath = function () {
+        this.AIPath = [];
     };
     Level.prototype.setSpawns = function () {
     };
@@ -439,10 +440,13 @@ var InputC = (function () {
     return InputC;
 })();
 var AIHeroC = (function () {
-    function AIHeroC() {
+    function AIHeroC(path) {
+        if (path === void 0) { path = []; }
         this.name = "aihero";
         this.movementCooldown = 1000;
         this.value = true;
+        this.pathReady = true;
+        this.AIPath = path;
     }
     return AIHeroC;
 })();
@@ -529,7 +533,7 @@ function AIMovement(e) {
                 e["movement"].y = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
         }
     }
-    if (e["AIPath"] && e["AIPath"].ready) {
+    if (e["aihero"] && e["aihero"].pathReady) {
     }
 }
 function movement(e) {
@@ -596,8 +600,32 @@ var Game = (function () {
             e.add(new AABBC(8, 8));
             e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
             e.add(new CombatC());
-            e.add(new AIHeroC());
+            e.add(new AIHeroC(this.World.AIPath));
             this.hEntity = e;
+            this.World.entities.push(e);
+        }
+        for (var i = 0; i < 5; i++) {
+            var e = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
+            this.World.entities.push(e);
+        }
+        for (var i = 0; i < 3; i++) {
+            var e = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[3]));
+            this.World.entities.push(e);
+        }
+        {
+            var e = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[4]));
             this.World.entities.push(e);
         }
         this.state = "MainMenu";

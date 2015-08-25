@@ -103,10 +103,13 @@ var InputC = (function () {
     return InputC;
 })();
 var AIHeroC = (function () {
-    function AIHeroC() {
+    function AIHeroC(path) {
+        if (path === void 0) { path = []; }
         this.name = "aihero";
         this.movementCooldown = 1000;
         this.value = true;
+        this.pathReady = true;
+        this.AIPath = path;
     }
     return AIHeroC;
 })();

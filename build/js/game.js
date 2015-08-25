@@ -48,8 +48,32 @@ var Game = (function () {
             e.add(new AABBC(8, 8));
             e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
             e.add(new CombatC());
-            e.add(new AIHeroC());
+            e.add(new AIHeroC(this.World.AIPath));
             this.hEntity = e;
+            this.World.entities.push(e);
+        }
+        for (var i = 0; i < 5; i++) {
+            var e = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
+            this.World.entities.push(e);
+        }
+        for (var i = 0; i < 3; i++) {
+            var e = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[3]));
+            this.World.entities.push(e);
+        }
+        {
+            var e = new Entity();
+            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
+            e.add(new LevelC(this.World));
+            e.add(new AABBC(8, 8));
+            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[4]));
             this.World.entities.push(e);
         }
         this.state = "MainMenu";
