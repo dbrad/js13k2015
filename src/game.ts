@@ -26,71 +26,77 @@ class Game {
     private entities: Entity[] = [];
     World: Level;
 
+    makeGEntity(x: number, y: number, sprite: HTMLCanvasElement, colType: CollisionTypes): Entity {
+        var e: Entity = new Entity();
+        e.add(new PositionC(x, y));
+        e.add(new AABBC(8, 8));
+        e.add(new MovementC());
+        e.add(new CollisionC(colType));
+        e.add(new LevelC(this.World));
+        e.add(new SpriteC(sprite));
+        return e;
+    }
+
     init(): void {
         console.log("Initializing...");
         /** Initalize Player and World */
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(10, 1)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(10, 1), new Pt(0, 8)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 16)));
+        SSC.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(5, 1)));
+        SSC.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(5, 1), new Pt(40, 0)));
+        SSC.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 8)));
+        SSC.storeSheet(new SpriteSheet("sheet", "alpha", 8, 0, new Dm(10, 3), new Pt(0, 16)));
 
-        Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
+        Level.defaultTileSet = new TileSet(SSC.spriteSheet("board"));
         // Full screen is 32 x 30
         this.World = new Level();
 
-        {
-            var e: Entity = this.pEntity = new Entity();
-            e.add(new InputC());
-            e.add(new MovementC());
-            e.add(new CollisionC(CollisionTypes.LEVEL));
+        { // Player Ghost
+            var e: Entity = this.pEntity = this.makeGEntity(1, 1,
+                SSC.spriteSheet("pieces").sprites[0], CollisionTypes.WORLD);
+            e.add(new InputC(true));
+            e.add(new HauntC());
+            e.add(new PlayerC());
             e.add(new AudioC('gblip.wav'));
-            e.add(new LevelC(this.World));
-            e.add(new PositionC(1, 1));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-            this.pEntity = e;
-            this.World.entities.push(this.pEntity);
+            this.World.entities.push(e);
         }
 
-        {
-            var e: Entity = this.hEntity = new Entity();
-            e.add(new PositionC(1, this.World.map.size.height - 2));
-            e.add(new MovementC());
+
+        { // AI Hero
+            var e: Entity = this.hEntity = this.makeGEntity(1, this.World.map.size.height - 2,
+                SSC.spriteSheet("pieces").sprites[1], CollisionTypes.ENTITY);
             e.add(new AudioC('hstep.wav'));
-            e.add(new CollisionC());
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
             e.add(new CombatC());
             e.add(new AIHeroC(this.World.AIPath));
-            this.hEntity = e;
             this.World.entities.push(e);
         }
 
+        // Weak Monsters
         for (var i: number = 0; i < 5; i++) {
-            var e: Entity = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
+            var pos: Pt = this.World.eSpawns.splice(getRandomInt((((this.World.eSpawns.length - 1) / 2) | 0), this.World.eSpawns.length - 1), 1)[0];
+            var e: Entity = this.makeGEntity(pos.x, pos.y,
+                SSC.spriteSheet("pieces").sprites[2], CollisionTypes.ENTITY);
+            e.add(new InputC(false));
+            e.add(new CombatC());
+            e.add(new AudioC('gblip.wav'));
             this.World.entities.push(e);
         }
 
-        for (var i: number = 0; i < 3; i++) {
-            var e: Entity = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[3]));
+        // Strong Monsters
+        for (var i: number = 0; i < 5; i++) {
+            var pos: Pt = this.World.eSpawns.splice(getRandomInt(0, (((this.World.eSpawns.length - 1) / 2) | 0)), 1)[0];
+            var e: Entity = this.makeGEntity(pos.x, pos.y,
+                SSC.spriteSheet("pieces").sprites[3], CollisionTypes.ENTITY);
+            e.add(new InputC(false));
+            e.add(new CombatC());
+            e.add(new AudioC('gblip.wav'));
             this.World.entities.push(e);
         }
 
+        // Boss Monster
         {
-          var e: Entity = new Entity();
-          e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-          e.add(new LevelC(this.World));
-          e.add(new AABBC(8, 8));
-          e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[4]));
-          this.World.entities.push(e);
+            var e: Entity = this.makeGEntity(23, 1,
+                SSC.spriteSheet("pieces").sprites[4], CollisionTypes.ENTITY);
+            e.add(new BossC());
+            this.World.entities.push(e);
         }
 
         this.state = "MainMenu";
@@ -104,25 +110,25 @@ class Game {
                 this.state = "GameMaze";
                 break;
             case "GameMaze":
-                if(this.deltaPaused > 0) {
+                // Pause delta handling
+
+                if (this.deltaPaused > 0) {
                     delta -= this.deltaPaused;
                     if (delta < 0) delta = 0;
                     this.deltaPaused = 0;
                 }
 
-                this.hEntity["aihero"].movementCooldown -= delta;
-                combat(this.hEntity);
-                AIMovement(this.hEntity);
-                if (this.hEntity["movement"].x != 0 || this.hEntity["movement"].y != 0)
-                    collision(this.hEntity);
-                movementSound(this.hEntity);
-                movement(this.hEntity);
+                for (var e of this.World.entities) {
+                    combat(e);
+                    AIMovement(e, delta);
+                    input(e, delta);
+                    haunt(e)
 
-                input(this.pEntity);
-                if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
-                    collision(this.pEntity);
-                movementSound(this.pEntity);
-                movement(this.pEntity);
+                    if (e["mv"] && (e["mv"].x != 0 || e["mv"].y != 0))
+                        collision(e);
+                    movementSound(e);
+                    movement(e);
+                }
 
                 break;
             case "GamePause":
@@ -137,6 +143,7 @@ class Game {
 
     /** Draw */
     change: boolean = true;
+    redraw: boolean = true;
     clearScreen: boolean = true;
     draw(): void {
         switch (this.state) {
@@ -153,13 +160,18 @@ class Game {
                     }
                 }
 
-                if (this.pEntity["sprite"].redraw || this.hEntity["sprite"].redraw || this.change) {
+                for (var entity of this.World.entities) {
+                    if (entity["sprite"] && entity["sprite"].redraw === true)
+                        this.redraw = true;
+                }
+                if (this.redraw || this.change) {
                     this.World.map.draw(this.ctx);
                     for (var entity of this.World.entities) {
                         draw(this.ctx, entity);
                     }
                     draw(this.ctx, this.pEntity);
                     this.change = false;
+                    this.redraw = false;
                 }
                 break;
             case "GamePause":
@@ -171,7 +183,7 @@ class Game {
                     this.ctx.font = "18px Verdana";
                     this.ctx.textAlign = "center";
                     this.ctx.fillStyle = "white";
-                    this.ctx.fillText('PAUSED', ((this.screen.width / 2) | 0), ((this.screen.height / 2) | 0) );
+                    this.ctx.fillText('PAUSED', ((this.screen.width / 2) | 0), ((this.screen.height / 2) | 0));
                     this.change = false;
                 }
                 break;
@@ -206,14 +218,14 @@ class Game {
     private timePaused: number = 0;
     private deltaPaused: number = 0;
     pause(): void {
-        if(this.state === "GameMaze") {
+        if (this.state === "GameMaze") {
             this.state = "GamePause";
             this.change = true;
             this.timePaused = performance.now();
         }
     }
     unpause(): void {
-        if(this.state === "GamePause") {
+        if (this.state === "GamePause") {
             this.state = "GameMaze";
             this.change = this.clearScreen = true;
             this.deltaPaused = performance.now() - this.timePaused;
@@ -241,8 +253,8 @@ function onResize() {
 window.onload = () => {
     onResize();
     window.addEventListener('resize', onResize, false);
-    window.onkeydown = Input.Keyboard.keyDown;
-    window.onkeyup = Input.Keyboard.keyUp;
+    window.onkeydown = Input.KB.keyDown;
+    window.onkeyup = Input.KB.keyUp;
 
     var game = new Game(<HTMLCanvasElement>document.getElementById("gameCanvas"));
     ImageCache.Loader.add("sheet", "sheet.png");

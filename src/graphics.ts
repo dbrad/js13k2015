@@ -4,7 +4,6 @@ interface Context2D extends CanvasRenderingContext2D {
     webkitImageSmoothingEnabled: boolean;
 }
 
-// TODO(david): Maybe factor out Pt and Dm. x/y & w/h on each thing might take up less on compiled js.
 class Pt {
     x: number;
     y: number;
@@ -94,11 +93,15 @@ class SpriteSheet {
         }
     }
 }
+
+function getRandomInt(min: number = 0, max: number = 1): number {
+    return ((Math.random() * (max - min + 1)) | 0) + min;
+}
 /** Global Caches */
 interface SpriteSheetArray {
     [index: string]: SpriteSheet;
 }
-module SpriteSheetCache {
+module SSC {
     var sheets: SpriteSheetArray = {};
 
     export function storeSheet(sheet: SpriteSheet): void {

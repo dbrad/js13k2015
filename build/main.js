@@ -1,16 +1,20 @@
 var Input;
 (function (Input) {
-    var Keyboard;
-    (function (Keyboard) {
+    var KB;
+    (function (KB) {
         (function (KEY) {
             KEY[KEY["A"] = 65] = "A";
             KEY[KEY["D"] = 68] = "D";
             KEY[KEY["W"] = 87] = "W";
             KEY[KEY["S"] = 83] = "S";
+            KEY[KEY["LEFT"] = 37] = "LEFT";
+            KEY[KEY["RIGHT"] = 39] = "RIGHT";
+            KEY[KEY["UP"] = 38] = "UP";
+            KEY[KEY["DOWN"] = 40] = "DOWN";
             KEY[KEY["ENTER"] = 13] = "ENTER";
             KEY[KEY["SPACE"] = 32] = "SPACE";
-        })(Keyboard.KEY || (Keyboard.KEY = {}));
-        var KEY = Keyboard.KEY;
+        })(KB.KEY || (KB.KEY = {}));
+        var KEY = KB.KEY;
         var _isDown = [];
         var _isUp = [];
         var _wasDown = [];
@@ -20,13 +24,13 @@ var Input;
         function isDown(keyCode) {
             return (_isDown[keyCode]);
         }
-        Keyboard.isDown = isDown;
+        KB.isDown = isDown;
         function wasDown(keyCode) {
             var result = _wasDown[keyCode];
             _wasDown[keyCode] = false;
             return (result);
         }
-        Keyboard.wasDown = wasDown;
+        KB.wasDown = wasDown;
         function keyDown(event) {
             var keyCode = event.which;
             _isDown[keyCode] = true;
@@ -34,14 +38,14 @@ var Input;
                 _wasDown[keyCode] = true;
             _isUp[keyCode] = false;
         }
-        Keyboard.keyDown = keyDown;
+        KB.keyDown = keyDown;
         function keyUp(event) {
             var keyCode = event.which;
             _isDown[keyCode] = false;
             _isUp[keyCode] = true;
         }
-        Keyboard.keyUp = keyUp;
-    })(Keyboard = Input.Keyboard || (Input.Keyboard = {}));
+        KB.keyUp = keyUp;
+    })(KB = Input.KB || (Input.KB = {}));
 })(Input || (Input = {}));
 
 var Pt = (function () {
@@ -108,18 +112,23 @@ var SpriteSheet = (function () {
     };
     return SpriteSheet;
 })();
-var SpriteSheetCache;
-(function (SpriteSheetCache) {
+function getRandomInt(min, max) {
+    if (min === void 0) { min = 0; }
+    if (max === void 0) { max = 1; }
+    return ((Math.random() * (max - min + 1)) | 0) + min;
+}
+var SSC;
+(function (SSC) {
     var sheets = {};
     function storeSheet(sheet) {
         sheets[sheet.name] = sheet;
     }
-    SpriteSheetCache.storeSheet = storeSheet;
+    SSC.storeSheet = storeSheet;
     function spriteSheet(name) {
         return sheets[name];
     }
-    SpriteSheetCache.spriteSheet = spriteSheet;
-})(SpriteSheetCache || (SpriteSheetCache = {}));
+    SSC.spriteSheet = spriteSheet;
+})(SSC || (SSC = {}));
 var ImageCache;
 (function (ImageCache) {
     var cache = {};
@@ -176,7 +185,8 @@ var AudioPool = (function () {
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 var VTile = (function (_super) {
     __extends(VTile, _super);
@@ -241,12 +251,16 @@ var TileMap = (function () {
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 var MetaTile = (function (_super) {
     __extends(MetaTile, _super);
     function MetaTile(tile, x, y, value) {
         _super.call(this, tile.texture, tile.walkable);
+        this.FVal = 0;
+        this.GVal = 0;
+        this.HVal = 0;
         this.value = value;
         this.x = x;
         this.y = y;
@@ -258,35 +272,38 @@ var MetaTile = (function (_super) {
 var Level = (function () {
     function Level(map) {
         if (map === void 0) { map = new TileMap(Dm.from(25, 25), Pt.from(8, 32)); }
-        this.validEnemySpawns = [];
+        this.eSpawns = [];
+        this.AIPath = [];
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
-        this.generateLevel();
+        do {
+            this.generateLevel();
+            this.AIPath = this.generatePath(1, 23, 23, 1);
+        } while (this.AIPath.length < 50);
         this.setSpawns();
-        this.generatePath();
         this.entities = [];
     }
-    Level.prototype.getWall = function (px, py, x, y) {
+    Level.prototype.getNbr = function (px, py, x, y, val) {
         var tile = this.map.getTile(x, y);
-        if (tile && tile.value === 1) {
+        if (tile && tile.value === val) {
             tile.xd = (x - px);
             tile.yd = (y - py);
             return tile;
         }
         return undefined;
     };
-    Level.prototype.getWalls = function (x, y) {
+    Level.prototype.getNbrs = function (x, y, val) {
         var result = [];
-        var t1 = this.getWall(x, y, x, y - 1);
+        var t1 = this.getNbr(x, y, x, y - 1, val);
         if (t1)
             result.push(t1);
-        var t2 = this.getWall(x, y, x, y + 1);
+        var t2 = this.getNbr(x, y, x, y + 1, val);
         if (t2)
             result.push(t2);
-        var t3 = this.getWall(x, y, x - 1, y);
+        var t3 = this.getNbr(x, y, x - 1, y, val);
         if (t3)
             result.push(t3);
-        var t4 = this.getWall(x, y, x + 1, y);
+        var t4 = this.getNbr(x, y, x + 1, y, val);
         if (t4)
             result.push(t4);
         return result;
@@ -301,15 +318,19 @@ var Level = (function () {
         for (var i = 1; i < this.map.size.height - 1; i++) {
             this.map.tiles[this.map.size.width * i] = this.map.tiles[(this.map.size.width * (i + 1)) - 1] = 2;
         }
-        var seed = Pt.from(1, 1);
+        var seed = Pt.from(getRandomInt(1, 23), getRandomInt(1, 23));
+        if (seed.x % 2 == 0)
+            seed.x -= 1;
+        if (seed.y % 2 == 0)
+            seed.y -= 1;
         var currentTile = this.map.getTile(seed.x, seed.y);
         currentTile.value = 0;
         this.map.setTile(currentTile.x, currentTile.y, 0);
         var walls = [];
         do {
             if (currentTile)
-                walls = walls.concat(this.getWalls(currentTile.x, currentTile.y));
-            var wallIndex = ((Math.random() * walls.length) | 0);
+                walls = walls.concat(this.getNbrs(currentTile.x, currentTile.y, 1));
+            var wallIndex = getRandomInt(0, walls.length - 1);
             var tileToCheck = walls[wallIndex];
             var nextTile = this.map.getTile(tileToCheck.x + tileToCheck.xd, tileToCheck.y + tileToCheck.yd);
             if (nextTile && (nextTile.value === 1)) {
@@ -327,10 +348,82 @@ var Level = (function () {
             walls = walls.filter(function (obj, index, array) { return (obj.value === 1); });
         } while (walls.length != 0);
     };
-    Level.prototype.generatePath = function () {
-        this.AIPath = [];
+    Level.prototype.generatePath = function (startX, startY, goalX, goalY) {
+        var path = [];
+        var openList = [], closedList = [], nbrs = [];
+        var current, ctile, parent;
+        ;
+        openList.push(this.map.getTile(startX, startY));
+        do {
+            current = openList.pop();
+            closedList.push(current);
+            if (current.x === goalX && current.y === goalY) {
+                ctile = current;
+                break;
+            }
+            nbrs = this.getNbrs(current.x, current.y, 0);
+            for (var _i = 0; _i < nbrs.length; _i++) {
+                var nbr = nbrs[_i];
+                if (this.tileInSet(nbr.x, nbr.y, closedList))
+                    continue;
+                var tile = this.getTileInSet(nbr.x, nbr.y, openList);
+                if (tile === undefined) {
+                    nbr.parent = current;
+                    nbr.HVal = (Math.abs(goalX - nbr.x) + Math.abs(goalY - nbr.y));
+                    nbr.GVal = current.GVal + 10;
+                    nbr.FVal = nbr.HVal + nbr.GVal;
+                    openList.push(nbr);
+                }
+                else {
+                    var tempG = current.GVal + 10;
+                    if (tempG < tile.GVal) {
+                        tile.parent = current;
+                        tile.GVal = current.GVal + 10;
+                        tile.FVal = tile.HVal + tile.GVal;
+                    }
+                }
+            }
+            if (openList.length === 0)
+                break;
+            openList.sort(function (tileA, tileB) { return tileB.FVal - tileA.FVal; });
+        } while (true);
+        do {
+            parent = ctile.parent;
+            path.push(Pt.from(ctile.x - parent.x, ctile.y - parent.y));
+            ctile = parent;
+        } while (ctile.parent !== undefined);
+        return path;
+    };
+    Level.prototype.getTileInSet = function (x, y, arr) {
+        var result = undefined;
+        for (var _i = 0; _i < arr.length; _i++) {
+            var tile = arr[_i];
+            if (tile.x === x && tile.y === y) {
+                result = tile;
+                break;
+            }
+        }
+        return result;
+    };
+    Level.prototype.tileInSet = function (x, y, arr) {
+        var result = false;
+        for (var _i = 0; _i < arr.length; _i++) {
+            var tile = arr[_i];
+            result = result || (tile.x === x && tile.y === y);
+            if (result === true)
+                break;
+        }
+        return result;
     };
     Level.prototype.setSpawns = function () {
+        for (var y = 2; y <= 22; y++) {
+            for (var x = 2; x <= 22; x++) {
+                var tile = this.map.getTile(x, y);
+                if (tile.value === 0) {
+                    this.eSpawns.push(Pt.from(x, y));
+                }
+            }
+        }
     };
     return Level;
 })();
@@ -360,10 +453,10 @@ var PositionC = (function () {
     return PositionC;
 })();
 var AABBC = (function () {
-    function AABBC(width, height) {
+    function AABBC(w, h) {
         this.name = "aabb";
-        this.width = width;
-        this.height = height;
+        this.w = w;
+        this.h = h;
     }
     return AABBC;
 })();
@@ -371,6 +464,7 @@ var SpriteC = (function () {
     function SpriteC(image) {
         this.name = "sprite";
         this.redraw = true;
+        this.visable = true;
         this.image = image;
     }
     return SpriteC;
@@ -382,14 +476,6 @@ var LevelC = (function () {
     }
     return LevelC;
 })();
-var LayerC = (function () {
-    function LayerC(layer) {
-        if (layer === void 0) { layer = 0; }
-        this.name = "layer";
-        this.layer = layer;
-    }
-    return LayerC;
-})();
 var AudioC = (function () {
     function AudioC(sound) {
         this.name = "audio";
@@ -399,7 +485,7 @@ var AudioC = (function () {
 })();
 var MovementC = (function () {
     function MovementC() {
-        this.name = "movement";
+        this.name = "mv";
         this.x = 0;
         this.y = 0;
     }
@@ -409,6 +495,7 @@ var CollisionTypes;
 (function (CollisionTypes) {
     CollisionTypes[CollisionTypes["ENTITY"] = 0] = "ENTITY";
     CollisionTypes[CollisionTypes["LEVEL"] = 1] = "LEVEL";
+    CollisionTypes[CollisionTypes["WORLD"] = 2] = "WORLD";
 })(CollisionTypes || (CollisionTypes = {}));
 var CollisionC = (function () {
     function CollisionC(type) {
@@ -425,6 +512,24 @@ var PlayerC = (function () {
     }
     return PlayerC;
 })();
+var AIHeroC = (function () {
+    function AIHeroC(path) {
+        if (path === void 0) { path = []; }
+        this.name = "aihero";
+        this.movementCooldown = 5000;
+        this.value = true;
+        this.pathReady = true;
+        this.AIPath = path;
+    }
+    return AIHeroC;
+})();
+var BossC = (function () {
+    function BossC() {
+        this.name = "boss";
+        this.value = true;
+    }
+    return BossC;
+})();
 var CombatC = (function () {
     function CombatC() {
         this.name = "combat";
@@ -433,73 +538,159 @@ var CombatC = (function () {
     return CombatC;
 })();
 var InputC = (function () {
-    function InputC() {
+    function InputC(enabled) {
+        if (enabled === void 0) { enabled = true; }
         this.name = "input";
-        this.value = true;
+        this.enabled = true;
+        this.cooldowns = [];
+        this.enabled = enabled;
+        this.cooldowns[0] = this.cooldowns[1] = this.cooldowns[2] = this.cooldowns[3] = 0;
     }
     return InputC;
 })();
-var AIHeroC = (function () {
-    function AIHeroC(path) {
-        if (path === void 0) { path = []; }
-        this.name = "aihero";
-        this.movementCooldown = 1000;
-        this.value = true;
-        this.pathReady = true;
-        this.AIPath = path;
+var HauntC = (function () {
+    function HauntC() {
+        this.name = "haunt";
+        this.haunting = false;
     }
-    return AIHeroC;
+    return HauntC;
+})();
+var XPC = (function () {
+    function XPC(xp) {
+        if (xp === void 0) { xp = 0; }
+        this.name = "xp";
+        this.value = 0;
+        this.value = xp;
+    }
+    return XPC;
+})();
+var LVLC = (function () {
+    function LVLC(lvl) {
+        if (lvl === void 0) { lvl = 1; }
+        this.name = "lvl";
+        this.value = lvl;
+    }
+    return LVLC;
+})();
+var HPC = (function () {
+    function HPC(hp) {
+        if (hp === void 0) { hp = 5; }
+        this.name = "hp";
+        this.value = hp;
+    }
+    return HPC;
 })();
 
 /// <reference path="ECS.ts"/>
 function draw(ctx, e) {
-    var offsetX = 0, offsetY = 0;
-    if (e["level"]) {
-        offsetX = e["level"].level.map.pos.x;
-        offsetY = e["level"].level.map.pos.y;
+    if (e["sprite"]) {
+        var offsetX = 0, offsetY = 0;
+        if (e["level"]) {
+            offsetX = e["level"].level.map.pos.x;
+            offsetY = e["level"].level.map.pos.y;
+        }
+        if (e["sprite"].visable === true) {
+            ctx.drawImage(e["sprite"].image, 0, 0, e["aabb"].w, e["aabb"].h, e["pos"].x * e["sprite"].image.width + offsetX, e["pos"].y * e["sprite"].image.height + offsetY, e["aabb"].w, e["aabb"].h);
+        }
+        e["sprite"].redraw = false;
     }
-    ctx.drawImage(e["sprite"].image, 0, 0, e["aabb"].width, e["aabb"].height, e["pos"].x * e["sprite"].image.width + offsetX, e["pos"].y * e["sprite"].image.height + offsetY, e["aabb"].width, e["aabb"].height);
-    e["sprite"].redraw = false;
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
 }
-function input(e) {
-    if (Input.Keyboard.wasDown(Input.Keyboard.KEY.D)) {
-        e["movement"].x = 1;
+function input(e, delta) {
+    if (e["input"]) {
+        for (var cd in e["input"].cooldowns) {
+            e["input"].cooldowns[cd] -= delta;
+        }
+        if (e["mv"]) {
+            if ((Input.KB.isDown(Input.KB.KEY.D) || Input.KB.isDown(Input.KB.KEY.RIGHT)) && e["input"].cooldowns[0] <= 0) {
+                e["input"].cooldowns[0] = 166;
+                e["mv"].x = 1;
+            }
+            if ((Input.KB.isDown(Input.KB.KEY.A) || Input.KB.isDown(Input.KB.KEY.LEFT)) && e["input"].cooldowns[1] <= 0) {
+                e["input"].cooldowns[1] = 166;
+                e["mv"].x = -1;
+            }
+            if ((Input.KB.isDown(Input.KB.KEY.W) || Input.KB.isDown(Input.KB.KEY.UP)) && e["input"].cooldowns[2] <= 0) {
+                e["input"].cooldowns[2] = 166;
+                e["mv"].y = -1;
+            }
+            if ((Input.KB.isDown(Input.KB.KEY.S) || Input.KB.isDown(Input.KB.KEY.DOWN)) && e["input"].cooldowns[3] <= 0) {
+                e["input"].cooldowns[3] = 166;
+                e["mv"].y = 1;
+            }
+            if (e["input"].enabled === false) {
+                e["mv"].x = e["mv"].y = 0;
+            }
+        }
+        if (e["player"]) {
+            if (Input.KB.wasDown(Input.KB.KEY.SPACE)) {
+                if (e["player"] && e["haunt"]) {
+                    e["haunt"].haunting = !(e["haunt"].haunting);
+                }
+            }
+        }
     }
-    if (Input.Keyboard.wasDown(Input.Keyboard.KEY.A)) {
-        e["movement"].x = -1;
-    }
-    if (Input.Keyboard.wasDown(Input.Keyboard.KEY.W)) {
-        e["movement"].y = -1;
-    }
-    if (Input.Keyboard.wasDown(Input.Keyboard.KEY.S)) {
-        e["movement"].y = 1;
+}
+function haunt(e) {
+    if (e["haunt"] && e["level"]) {
+        if (e["haunt"].haunting && !e["haunt"].haunted) {
+            var success = false;
+            for (var _i = 0, _a = e["level"].level.entities; _i < _a.length; _i++) {
+                var entity = _a[_i];
+                if (!entity["player"] && !entity["aihero"] && !entity["boss"]
+                    && entity["pos"] && e["pos"]
+                    && entity["pos"].x === e["pos"].x
+                    && entity["pos"].y === e["pos"].y) {
+                    e["haunt"].haunted = entity;
+                    entity["input"].enabled = e["sprite"].redraw = success = true;
+                    e["input"].enabled = e["sprite"].visable = false;
+                }
+            }
+            if (!success) {
+                e["haunt"].haunting = false;
+            }
+        }
+        else if (!e["haunt"].haunting && e["haunt"].haunted) {
+            e["pos"].x = e["haunt"].haunted["pos"].x;
+            e["pos"].y = e["haunt"].haunted["pos"].y;
+            e["haunt"].haunted["input"].enabled = e["haunt"].haunting = false;
+            e["input"].enabled = e["sprite"].visable = e["sprite"].redraw = true;
+            e["haunt"].haunted = undefined;
+        }
+        else if (e["haunt"].haunting && e["haunt"].haunted && e["haunt"].haunted["combat"] && !e["haunt"].haunted["combat"].alive) {
+            e["haunt"].haunting = false;
+        }
     }
 }
 function collision(e) {
     if (e["level"] && e["collision"]) {
-        var tile = e["level"].level.map.getTile(e["pos"].x + e["movement"].x, e["pos"].y + e["movement"].y);
-        if (!tile || !tile.walkable) {
-            e["movement"].x = 0;
-            e["movement"].y = 0;
+        var tile = e["level"].level.map.getTile(e["pos"].x + e["mv"].x, e["pos"].y + e["mv"].y);
+        if (e["collision"].type === CollisionTypes.WORLD) {
+            if (!tile || tile.value === 2) {
+                e["mv"].x = 0;
+                e["mv"].y = 0;
+            }
         }
-        else if (e["collision"].type == CollisionTypes.ENTITY) {
+        else if (e["collision"].type !== CollisionTypes.WORLD && (!tile || !tile.walkable)) {
+            e["mv"].x = 0;
+            e["mv"].y = 0;
+        }
+        else if (e["collision"].type === CollisionTypes.ENTITY) {
             var occupied = false;
             var o_entity;
             for (var _i = 0, _a = e["level"].level.entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
-                occupied = occupied || ((entity["pos"].x == (e["pos"].x + e["movement"].x))
-                    && (entity["pos"].y == (e["pos"].y + e["movement"].y))
-                    && (entity["collision"]));
+                occupied = occupied || ((entity["pos"].x == (e["pos"].x + e["mv"].x))
+                    && (entity["pos"].y == (e["pos"].y + e["mv"].y))
+                    && (entity["collision"])
+                    && entity["collision"].type === CollisionTypes.ENTITY);
                 if (occupied) {
                     o_entity = entity;
                     break;
                 }
             }
             if (occupied) {
-                e["movement"].x = 0;
-                e["movement"].y = 0;
+                e["mv"].x = 0;
+                e["mv"].y = 0;
                 if (e["combat"]) {
                     e["combat"].target = o_entity;
                     console.log(e["combat"].target);
@@ -509,43 +700,54 @@ function collision(e) {
     }
 }
 function combat(e) {
-    if (e["combat"] && e["combat"].target && e["combat"].target["combat"]) {
-        if (!e["combat"].target["combat"].alive) {
-            e["combat"].target = undefined;
+    if (e["aihero"] && e["combat"]) {
+        if (e["combat"].target && e["combat"].target["combat"]) {
+            var target = e["combat"].target;
+            if (!target["combat"].alive) {
+                e["combat"].target = undefined;
+            }
+            else {
+                target["combat"].alive = false;
+                target["sprite"].visable = false;
+                target["sprite"].redraw = true;
+                target["collision"].type = CollisionTypes.WORLD;
+            }
         }
         else {
+            e["combat"].target = undefined;
         }
-    }
-    else {
-        e["combat"].target = undefined;
     }
 }
-function AIMovement(e) {
-    if (e["combat"] && e["combat"].target) {
-        return;
-    }
-    else if (e["aihero"] && e["aihero"].movementCooldown <= 0) {
-        e["aihero"].movementCooldown += 1000;
-        if (e["movement"]) {
-            if (((Math.random() * 2) | 0) === 0)
-                e["movement"].x = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
-            else
-                e["movement"].y = ((Math.random() * 2) | 0) === 0 ? -1 : 1;
+function AIMovement(e, delta) {
+    if (e["aihero"]) {
+        e["aihero"].movementCooldown -= delta;
+        if (e["combat"] && e["combat"].target) {
+            return;
         }
-    }
-    if (e["aihero"] && e["aihero"].pathReady) {
+        else if (e["aihero"].movementCooldown <= 0) {
+            e["aihero"].movementCooldown += 2000;
+            if (e["aihero"].AIPath.length > 0) {
+                if (e["aihero"].nextMove === undefined)
+                    e["aihero"].nextMove = e["aihero"].AIPath.pop();
+                e["mv"].x = e["aihero"].nextMove.x;
+                e["mv"].y = e["aihero"].nextMove.y;
+            }
+        }
     }
 }
 function movement(e) {
-    if (e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
-        e["pos"].x += e["movement"].x;
-        e["pos"].y += e["movement"].y;
-        e["movement"].x = e["movement"].y = 0;
+    if (e["mv"] && (e["mv"].x != 0 || e["mv"].y != 0)) {
+        e["pos"].x += e["mv"].x;
+        e["pos"].y += e["mv"].y;
+        e["mv"].x = e["mv"].y = 0;
+        if (e["aihero"]) {
+            e["aihero"].nextMove = undefined;
+        }
         e["sprite"].redraw = true;
     }
 }
 function movementSound(e) {
-    if (e["audio"] && e["movement"] && (e["movement"].x != 0 || e["movement"].y != 0)) {
+    if (e["audio"] && e["mv"] && (e["mv"].x != 0 || e["mv"].y != 0)) {
         e["audio"].sound.play();
     }
 }
@@ -560,6 +762,7 @@ var Game = (function () {
     function Game(screen) {
         this.entities = [];
         this.change = true;
+        this.redraw = true;
         this.clearScreen = true;
         this.then = performance.now();
         this.timePaused = 0;
@@ -570,62 +773,58 @@ var Game = (function () {
         this.ctx.mozImageSmoothingEnabled = false;
         this.ctx.imageSmoothingEnabled = false;
     }
+    Game.prototype.makeGEntity = function (x, y, sprite, colType) {
+        var e = new Entity();
+        e.add(new PositionC(x, y));
+        e.add(new AABBC(8, 8));
+        e.add(new MovementC());
+        e.add(new CollisionC(colType));
+        e.add(new LevelC(this.World));
+        e.add(new SpriteC(sprite));
+        return e;
+    };
     Game.prototype.init = function () {
         console.log("Initializing...");
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(10, 1)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(10, 1), new Pt(0, 8)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 16)));
-        Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
+        SSC.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(5, 1)));
+        SSC.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(5, 1), new Pt(40, 0)));
+        SSC.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 8)));
+        SSC.storeSheet(new SpriteSheet("sheet", "alpha", 8, 0, new Dm(10, 3), new Pt(0, 16)));
+        Level.defaultTileSet = new TileSet(SSC.spriteSheet("board"));
         this.World = new Level();
         {
-            var e = this.pEntity = new Entity();
-            e.add(new InputC());
-            e.add(new MovementC());
-            e.add(new CollisionC(CollisionTypes.LEVEL));
+            var e = this.pEntity = this.makeGEntity(1, 1, SSC.spriteSheet("pieces").sprites[0], CollisionTypes.WORLD);
+            e.add(new InputC(true));
+            e.add(new HauntC());
+            e.add(new PlayerC());
             e.add(new AudioC('gblip.wav'));
-            e.add(new LevelC(this.World));
-            e.add(new PositionC(1, 1));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-            this.pEntity = e;
-            this.World.entities.push(this.pEntity);
+            this.World.entities.push(e);
         }
         {
-            var e = this.hEntity = new Entity();
-            e.add(new PositionC(1, this.World.map.size.height - 2));
-            e.add(new MovementC());
+            var e = this.hEntity = this.makeGEntity(1, this.World.map.size.height - 2, SSC.spriteSheet("pieces").sprites[1], CollisionTypes.ENTITY);
             e.add(new AudioC('hstep.wav'));
-            e.add(new CollisionC());
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
             e.add(new CombatC());
             e.add(new AIHeroC(this.World.AIPath));
-            this.hEntity = e;
             this.World.entities.push(e);
         }
         for (var i = 0; i < 5; i++) {
-            var e = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
+            var pos = this.World.eSpawns.splice(getRandomInt((((this.World.eSpawns.length - 1) / 2) | 0), this.World.eSpawns.length - 1), 1)[0];
+            var e = this.makeGEntity(pos.x, pos.y, SSC.spriteSheet("pieces").sprites[2], CollisionTypes.ENTITY);
+            e.add(new InputC(false));
+            e.add(new CombatC());
+            e.add(new AudioC('gblip.wav'));
             this.World.entities.push(e);
         }
-        for (var i = 0; i < 3; i++) {
-            var e = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[3]));
+        for (var i = 0; i < 5; i++) {
+            var pos = this.World.eSpawns.splice(getRandomInt(0, (((this.World.eSpawns.length - 1) / 2) | 0)), 1)[0];
+            var e = this.makeGEntity(pos.x, pos.y, SSC.spriteSheet("pieces").sprites[3], CollisionTypes.ENTITY);
+            e.add(new InputC(false));
+            e.add(new CombatC());
+            e.add(new AudioC('gblip.wav'));
             this.World.entities.push(e);
         }
         {
-            var e = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[4]));
+            var e = this.makeGEntity(23, 1, SSC.spriteSheet("pieces").sprites[4], CollisionTypes.ENTITY);
+            e.add(new BossC());
             this.World.entities.push(e);
         }
         this.state = "MainMenu";
@@ -642,18 +841,17 @@ var Game = (function () {
                         delta = 0;
                     this.deltaPaused = 0;
                 }
-                this.hEntity["aihero"].movementCooldown -= delta;
-                combat(this.hEntity);
-                AIMovement(this.hEntity);
-                if (this.hEntity["movement"].x != 0 || this.hEntity["movement"].y != 0)
-                    collision(this.hEntity);
-                movementSound(this.hEntity);
-                movement(this.hEntity);
-                input(this.pEntity);
-                if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
-                    collision(this.pEntity);
-                movementSound(this.pEntity);
-                movement(this.pEntity);
+                for (var _i = 0, _a = this.World.entities; _i < _a.length; _i++) {
+                    var e = _a[_i];
+                    combat(e);
+                    AIMovement(e, delta);
+                    input(e, delta);
+                    haunt(e);
+                    if (e["mv"] && (e["mv"].x != 0 || e["mv"].y != 0))
+                        collision(e);
+                    movementSound(e);
+                    movement(e);
+                }
                 break;
             case "GamePause":
                 break;
@@ -679,14 +877,20 @@ var Game = (function () {
                         draw(this.ctx, entity);
                     }
                 }
-                if (this.pEntity["sprite"].redraw || this.hEntity["sprite"].redraw || this.change) {
+                for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
+                    var entity = _c[_b];
+                    if (entity["sprite"] && entity["sprite"].redraw === true)
+                        this.redraw = true;
+                }
+                if (this.redraw || this.change) {
                     this.World.map.draw(this.ctx);
-                    for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
-                        var entity = _c[_b];
+                    for (var _d = 0, _e = this.World.entities; _d < _e.length; _d++) {
+                        var entity = _e[_d];
                         draw(this.ctx, entity);
                     }
                     draw(this.ctx, this.pEntity);
                     this.change = false;
+                    this.redraw = false;
                 }
                 break;
             case "GamePause":
@@ -757,8 +961,8 @@ function onResize() {
 window.onload = function () {
     onResize();
     window.addEventListener('resize', onResize, false);
-    window.onkeydown = Input.Keyboard.keyDown;
-    window.onkeyup = Input.Keyboard.keyUp;
+    window.onkeydown = Input.KB.keyDown;
+    window.onkeyup = Input.KB.keyUp;
     var game = new Game(document.getElementById("gameCanvas"));
     ImageCache.Loader.add("sheet", "sheet.png");
     ImageCache.Loader.load(function () {

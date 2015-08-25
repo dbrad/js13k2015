@@ -1,12 +1,12 @@
-- generate spawn points in level
-- spawn hero, ghost, and boss at calculated points
-- add monsters as random valid points
+- generate spawn points in level (DONE)
+- spawn hero, ghost, and boss at calculated points (NOPE BUT DONE)
+- add monsters as random valid points (DONE)
 - add hero stats at top
 - add monster info at side
-- implement combat
-- implement haunting mechanic
+- implement combat (STUBBED)
+- implement haunting mechanic (DONE)
 - implement pre-turn healing
-- implement A* pathfinding for hero
+- implement A* pathfinding for hero (DONE)
 
 - make main menu / landing screen
   - instructions go here

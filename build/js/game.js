@@ -8,6 +8,7 @@ var Game = (function () {
     function Game(screen) {
         this.entities = [];
         this.change = true;
+        this.redraw = true;
         this.clearScreen = true;
         this.then = performance.now();
         this.timePaused = 0;
@@ -18,62 +19,58 @@ var Game = (function () {
         this.ctx.mozImageSmoothingEnabled = false;
         this.ctx.imageSmoothingEnabled = false;
     }
+    Game.prototype.makeGEntity = function (x, y, sprite, colType) {
+        var e = new Entity();
+        e.add(new PositionC(x, y));
+        e.add(new AABBC(8, 8));
+        e.add(new MovementC());
+        e.add(new CollisionC(colType));
+        e.add(new LevelC(this.World));
+        e.add(new SpriteC(sprite));
+        return e;
+    };
     Game.prototype.init = function () {
         console.log("Initializing...");
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(10, 1)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(10, 1), new Pt(0, 8)));
-        SpriteSheetCache.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 16)));
-        Level.defaultTileSet = new TileSet(SpriteSheetCache.spriteSheet("board"));
+        SSC.storeSheet(new SpriteSheet("sheet", "pieces", 8, 0, new Dm(5, 1)));
+        SSC.storeSheet(new SpriteSheet("sheet", "board", 8, 0, new Dm(5, 1), new Pt(40, 0)));
+        SSC.storeSheet(new SpriteSheet("sheet", "numbers", 8, 0, new Dm(10, 1), new Pt(0, 8)));
+        SSC.storeSheet(new SpriteSheet("sheet", "alpha", 8, 0, new Dm(10, 3), new Pt(0, 16)));
+        Level.defaultTileSet = new TileSet(SSC.spriteSheet("board"));
         this.World = new Level();
         {
-            var e = this.pEntity = new Entity();
-            e.add(new InputC());
-            e.add(new MovementC());
-            e.add(new CollisionC(CollisionTypes.LEVEL));
+            var e = this.pEntity = this.makeGEntity(1, 1, SSC.spriteSheet("pieces").sprites[0], CollisionTypes.WORLD);
+            e.add(new InputC(true));
+            e.add(new HauntC());
+            e.add(new PlayerC());
             e.add(new AudioC('gblip.wav'));
-            e.add(new LevelC(this.World));
-            e.add(new PositionC(1, 1));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[0]));
-            this.pEntity = e;
-            this.World.entities.push(this.pEntity);
+            this.World.entities.push(e);
         }
         {
-            var e = this.hEntity = new Entity();
-            e.add(new PositionC(1, this.World.map.size.height - 2));
-            e.add(new MovementC());
+            var e = this.hEntity = this.makeGEntity(1, this.World.map.size.height - 2, SSC.spriteSheet("pieces").sprites[1], CollisionTypes.ENTITY);
             e.add(new AudioC('hstep.wav'));
-            e.add(new CollisionC());
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[1]));
             e.add(new CombatC());
             e.add(new AIHeroC(this.World.AIPath));
-            this.hEntity = e;
             this.World.entities.push(e);
         }
         for (var i = 0; i < 5; i++) {
-            var e = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[2]));
+            var pos = this.World.eSpawns.splice(getRandomInt((((this.World.eSpawns.length - 1) / 2) | 0), this.World.eSpawns.length - 1), 1)[0];
+            var e = this.makeGEntity(pos.x, pos.y, SSC.spriteSheet("pieces").sprites[2], CollisionTypes.ENTITY);
+            e.add(new InputC(false));
+            e.add(new CombatC());
+            e.add(new AudioC('gblip.wav'));
             this.World.entities.push(e);
         }
-        for (var i = 0; i < 3; i++) {
-            var e = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[3]));
+        for (var i = 0; i < 5; i++) {
+            var pos = this.World.eSpawns.splice(getRandomInt(0, (((this.World.eSpawns.length - 1) / 2) | 0)), 1)[0];
+            var e = this.makeGEntity(pos.x, pos.y, SSC.spriteSheet("pieces").sprites[3], CollisionTypes.ENTITY);
+            e.add(new InputC(false));
+            e.add(new CombatC());
+            e.add(new AudioC('gblip.wav'));
             this.World.entities.push(e);
         }
         {
-            var e = new Entity();
-            e.add(new PositionC(((Math.random() * 23) | 0) + 1, ((Math.random() * 23) | 0) + 1));
-            e.add(new LevelC(this.World));
-            e.add(new AABBC(8, 8));
-            e.add(new SpriteC(SpriteSheetCache.spriteSheet("pieces").sprites[4]));
+            var e = this.makeGEntity(23, 1, SSC.spriteSheet("pieces").sprites[4], CollisionTypes.ENTITY);
+            e.add(new BossC());
             this.World.entities.push(e);
         }
         this.state = "MainMenu";
@@ -90,18 +87,17 @@ var Game = (function () {
                         delta = 0;
                     this.deltaPaused = 0;
                 }
-                this.hEntity["aihero"].movementCooldown -= delta;
-                combat(this.hEntity);
-                AIMovement(this.hEntity);
-                if (this.hEntity["movement"].x != 0 || this.hEntity["movement"].y != 0)
-                    collision(this.hEntity);
-                movementSound(this.hEntity);
-                movement(this.hEntity);
-                input(this.pEntity);
-                if (this.pEntity["movement"].x != 0 || this.pEntity["movement"].y != 0)
-                    collision(this.pEntity);
-                movementSound(this.pEntity);
-                movement(this.pEntity);
+                for (var _i = 0, _a = this.World.entities; _i < _a.length; _i++) {
+                    var e = _a[_i];
+                    combat(e);
+                    AIMovement(e, delta);
+                    input(e, delta);
+                    haunt(e);
+                    if (e["mv"] && (e["mv"].x != 0 || e["mv"].y != 0))
+                        collision(e);
+                    movementSound(e);
+                    movement(e);
+                }
                 break;
             case "GamePause":
                 break;
@@ -127,14 +123,20 @@ var Game = (function () {
                         draw(this.ctx, entity);
                     }
                 }
-                if (this.pEntity["sprite"].redraw || this.hEntity["sprite"].redraw || this.change) {
+                for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
+                    var entity = _c[_b];
+                    if (entity["sprite"] && entity["sprite"].redraw === true)
+                        this.redraw = true;
+                }
+                if (this.redraw || this.change) {
                     this.World.map.draw(this.ctx);
-                    for (var _b = 0, _c = this.World.entities; _b < _c.length; _b++) {
-                        var entity = _c[_b];
+                    for (var _d = 0, _e = this.World.entities; _d < _e.length; _d++) {
+                        var entity = _e[_d];
                         draw(this.ctx, entity);
                     }
                     draw(this.ctx, this.pEntity);
                     this.change = false;
+                    this.redraw = false;
                 }
                 break;
             case "GamePause":
@@ -205,8 +207,8 @@ function onResize() {
 window.onload = function () {
     onResize();
     window.addEventListener('resize', onResize, false);
-    window.onkeydown = Input.Keyboard.keyDown;
-    window.onkeyup = Input.Keyboard.keyUp;
+    window.onkeydown = Input.KB.keyDown;
+    window.onkeyup = Input.KB.keyUp;
     var game = new Game(document.getElementById("gameCanvas"));
     ImageCache.Loader.add("sheet", "sheet.png");
     ImageCache.Loader.load(function () {

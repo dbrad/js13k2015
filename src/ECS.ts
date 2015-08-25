@@ -39,12 +39,12 @@ class PositionC implements Component {
 
 class AABBC implements Component {
     name: string = "aabb";
-    width: number;
-    height: number;
+    w: number;
+    h: number;
 
-    constructor(width: number, height: number) {
-        this.width = width;
-        this.height = height;
+    constructor(w: number, h: number) {
+        this.w = w;
+        this.h = h;
     }
 }
 
@@ -52,6 +52,7 @@ class SpriteC implements Component {
     name: string = "sprite";
     image: HTMLCanvasElement;
     redraw: boolean = true;
+    visable: boolean = true;
 
     constructor(image: HTMLCanvasElement) {
         this.image = image;
@@ -67,32 +68,23 @@ class LevelC implements Component {
     }
 }
 
-class LayerC implements Component {
-    name: string = "layer";
-    layer: number;
+class AudioC implements Component {
+    name: string = "audio";
+    sound: AudioPool;
 
-    constructor(layer: number = 0) {
-        this.layer = layer;
+    constructor(sound: string) {
+        this.sound = new AudioPool(sound, 3);
     }
 }
 
-class AudioC implements Component {
-  name: string = "audio";
-  sound: AudioPool;
-
-  constructor(sound: string) {
-      this.sound = new AudioPool(sound, 3);
-  }
-}
-
 class MovementC implements Component {
-    name: string = "movement";
+    name: string = "mv";
     x: number = 0;
     y: number = 0;
 }
 
 enum CollisionTypes {
-    ENTITY, LEVEL
+    ENTITY, LEVEL, WORLD
 }
 class CollisionC implements Component {
     name: string = "collision";
@@ -107,24 +99,67 @@ class PlayerC implements Component {
     value: boolean = true;
 }
 
+class AIHeroC implements Component {
+    name: string = "aihero";
+    movementCooldown: number = 5000;
+    value: boolean = true
+    pathReady: boolean = true;
+    AIPath: Pt[];
+    nextMove: Pt;
+    constructor(path: Pt[] = []) {
+        this.AIPath = path;
+    }
+}
+
+class BossC implements Component {
+    name: string = "boss";
+    value: boolean = true;
+}
+
 class CombatC implements Component {
     name: string = "combat";
     target: Entity;
+    atk: number;
+    hp: number;
     alive: boolean = true;
 }
 
 class InputC implements Component {
     name: string = "input";
-    value: boolean = true;
+    enabled: boolean = true;
+    cooldowns: number[] = [];
+    constructor(enabled: boolean = true) {
+        this.enabled = enabled;
+        this.cooldowns[0] = this.cooldowns[1] = this.cooldowns[2] = this.cooldowns[3] = 0;
+    }
 }
 
-class AIHeroC implements Component {
-    name: string = "aihero";
-    movementCooldown: number = 1000;
-    value: boolean = true
-    pathReady: boolean = true;
-    AIPath: Pt[];
-    constructor(path: Pt[] = []) {
-      this.AIPath = path;
+class HauntC implements Component {
+    name: string = "haunt";
+    haunting: boolean = false;
+    haunted: Entity;
+}
+
+class XPC implements Component {
+    name: string = "xp";
+    value: number = 0;
+    constructor(xp: number = 0) {
+        this.value = xp;
+    }
+}
+
+class LVLC implements Component {
+    name: string = "lvl";
+    value: number;
+    constructor(lvl: number = 1) {
+       this.value = lvl;
+    } 
+}
+
+class HPC implements Component {
+    name: string = "hp";
+    value: number;
+    constructor(hp: number = 5) {
+        this.value = hp;
     }
 }

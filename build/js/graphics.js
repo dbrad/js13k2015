@@ -62,18 +62,23 @@ var SpriteSheet = (function () {
     };
     return SpriteSheet;
 })();
-var SpriteSheetCache;
-(function (SpriteSheetCache) {
+function getRandomInt(min, max) {
+    if (min === void 0) { min = 0; }
+    if (max === void 0) { max = 1; }
+    return ((Math.random() * (max - min + 1)) | 0) + min;
+}
+var SSC;
+(function (SSC) {
     var sheets = {};
     function storeSheet(sheet) {
         sheets[sheet.name] = sheet;
     }
-    SpriteSheetCache.storeSheet = storeSheet;
+    SSC.storeSheet = storeSheet;
     function spriteSheet(name) {
         return sheets[name];
     }
-    SpriteSheetCache.spriteSheet = spriteSheet;
-})(SpriteSheetCache || (SpriteSheetCache = {}));
+    SSC.spriteSheet = spriteSheet;
+})(SSC || (SSC = {}));
 var ImageCache;
 (function (ImageCache) {
     var cache = {};

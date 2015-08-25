@@ -1,16 +1,20 @@
 var Input;
 (function (Input) {
-    var Keyboard;
-    (function (Keyboard) {
+    var KB;
+    (function (KB) {
         (function (KEY) {
             KEY[KEY["A"] = 65] = "A";
             KEY[KEY["D"] = 68] = "D";
             KEY[KEY["W"] = 87] = "W";
             KEY[KEY["S"] = 83] = "S";
+            KEY[KEY["LEFT"] = 37] = "LEFT";
+            KEY[KEY["RIGHT"] = 39] = "RIGHT";
+            KEY[KEY["UP"] = 38] = "UP";
+            KEY[KEY["DOWN"] = 40] = "DOWN";
             KEY[KEY["ENTER"] = 13] = "ENTER";
             KEY[KEY["SPACE"] = 32] = "SPACE";
-        })(Keyboard.KEY || (Keyboard.KEY = {}));
-        var KEY = Keyboard.KEY;
+        })(KB.KEY || (KB.KEY = {}));
+        var KEY = KB.KEY;
         var _isDown = [];
         var _isUp = [];
         var _wasDown = [];
@@ -20,13 +24,13 @@ var Input;
         function isDown(keyCode) {
             return (_isDown[keyCode]);
         }
-        Keyboard.isDown = isDown;
+        KB.isDown = isDown;
         function wasDown(keyCode) {
             var result = _wasDown[keyCode];
             _wasDown[keyCode] = false;
             return (result);
         }
-        Keyboard.wasDown = wasDown;
+        KB.wasDown = wasDown;
         function keyDown(event) {
             var keyCode = event.which;
             _isDown[keyCode] = true;
@@ -34,12 +38,12 @@ var Input;
                 _wasDown[keyCode] = true;
             _isUp[keyCode] = false;
         }
-        Keyboard.keyDown = keyDown;
+        KB.keyDown = keyDown;
         function keyUp(event) {
             var keyCode = event.which;
             _isDown[keyCode] = false;
             _isUp[keyCode] = true;
         }
-        Keyboard.keyUp = keyUp;
-    })(Keyboard = Input.Keyboard || (Input.Keyboard = {}));
+        KB.keyUp = keyUp;
+    })(KB = Input.KB || (Input.KB = {}));
 })(Input || (Input = {}));
