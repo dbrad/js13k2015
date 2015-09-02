@@ -27,6 +27,7 @@ var Level = (function () {
         this.map = map;
         this.map.setTileSet(Level.defaultTileSet);
         do {
+            this.eSpawns = [];
             this.generateLevel();
             this.AIPath = this.generatePath(1, 23, 23, 1);
         } while (this.AIPath.length < 50);
@@ -141,6 +142,8 @@ var Level = (function () {
             parent = ctile.parent;
             path.push(Pt.from(ctile.x - parent.x, ctile.y - parent.y));
             ctile = parent;
+            if (ctile.x != startX && ctile.y != startY)
+                this.eSpawns.push(Pt.from(ctile.x, ctile.y));
         } while (ctile.parent !== undefined);
         return path;
     };
@@ -170,7 +173,6 @@ var Level = (function () {
             for (var x = 2; x <= 22; x++) {
                 var tile = this.map.getTile(x, y);
                 if (tile.value === 0) {
-                    this.eSpawns.push(Pt.from(x, y));
                 }
             }
         }
