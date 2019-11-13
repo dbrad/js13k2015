@@ -15,7 +15,7 @@
     "js13k"
   ],
   "dependencies": {
-    "gulp": "*",
+    "gulp": "^3.9.1",
     "gulp-csso": "*",
     "gulp-htmlmin": "*",
     "gulp-imagemin": "*",
